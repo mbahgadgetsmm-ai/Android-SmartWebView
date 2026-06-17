@@ -316,7 +316,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         adContainer = findViewById(R.id.msw_ad_container);
         SWVContext.print_view = findViewById(R.id.print_view);
         
-        // AMANKAN LAYAR UTAMA: Di awal, WebView disembunyikan total (Alpha 0) agar tidak terjadi kedip putih sekejap
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.setVisibility(View.INVISIBLE);
         }
@@ -350,6 +349,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
+        // ===== BOOSTER SAKTI: PERFORMANCE ULTRA HIGH SPEED =====
+        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK); 
+        webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH); 
+        webSettings.setEnableSmoothTransition(true);                   
+        SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null); 
+        // =======================================================
+
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
@@ -365,7 +371,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         SWVContext.asw_view.setHapticFeedbackEnabled(false);
-        SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         SWVContext.asw_view.setVerticalScrollBarEnabled(false);
 
         SWVContext.asw_view.setWebViewClient(new WebViewCallback());
@@ -766,7 +771,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Location permission granted.");
                         
-                        // PEMERIKSAAN EXTRA: Jangan dipaksa reload langsung jika halaman sudah siap, agar tidak terjadi kedip loading ulang pas pemindaian selesai
                         if (SWVContext.asw_view != null && !isPageLoaded) {
                             SWVContext.asw_view.post(() -> SWVContext.asw_view.reload());
                         }
@@ -818,13 +822,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             final View welcomeScreen = findViewById(R.id.msw_welcome);
             final View webViewLayout = findViewById(R.id.msw_view);
 
-            // Kunci: Hanya eksekusi jika halaman web sudah benar-benar termuat 100% (bukan halaman blank bawaan system)
             if (webViewLayout != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE && url.startsWith("http")) {
                 webViewLayout.setAlpha(0f);
                 webViewLayout.setVisibility(View.VISIBLE);
                 webViewLayout.animate()
                         .alpha(1f)
-                        .setDuration(600) // Durasi transisi fade-in 0.6 detik agar sangat halus
+                        .setDuration(600) 
                         .setListener(null);
 
                 welcomeScreen.animate()
