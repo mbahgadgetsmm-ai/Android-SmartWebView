@@ -18,13 +18,20 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Force Custom Mbah Gadget Icon
+      - name: Clean Old Icons and Force Custom Mbah Gadget Icon
         run: |
+          # Hapus semua ikon bawaan berformat .webp biar tidak bentrok
+          rm -f app/src/main/res/mipmap-*/ic_launcher.webp
+          rm -f app/src/main/res/mipmap-*/ic_launcher_round.webp
+
+          # Masukkan logo baru MBAH GADGET Anda ke semua folder resolusi
           cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-hdpi/ic_launcher.png
           cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-mdpi/ic_launcher.png
           cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-xhdpi/ic_launcher.png
           cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-xxhdpi/ic_launcher.png
           cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          
+          # Masukkan untuk versi ikon bulat (round)
           cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-hdpi/ic_launcher_round.png
           cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-mdpi/ic_launcher_round.png
           cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
