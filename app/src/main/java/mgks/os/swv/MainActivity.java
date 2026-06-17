@@ -3,10 +3,12 @@ package mgks.os.swv;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -21,7 +23,6 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private final FileNotificationStorage fns = new FileNotificationStorage(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,11 +35,9 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        SWVContext.initLayout(this);
-
         if (getIntent() != null && getIntent().getData() != null) {
             String uriString = getIntent().getData().toString();
-            SWVConfiguration.asw_url = uriString;
+            SWVContext.ASW_URL = uriString;
             Log.d(TAG, "Intent URI: " + uriString);
         }
 
@@ -46,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             Log.d(TAG, "onCreate: savedInstanceState is null, loading URL");
-            SWVContext.asw_view.loadUrl(SWVConfiguration.asw_url);
+            SWVContext.asw_view.loadUrl(SWVContext.ASW_URL);
         } else {
             Log.d(TAG, "onCreate: restored WebView state");
             SWVContext.asw_view.restoreState(savedInstanceState);
@@ -56,9 +55,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeWebView() {
-        SWVContext.init(this, SWVContext.asw_view, fns);
+        SWVContext.init(this, SWVContext.asw_view);
 
-        Playground playground = new Playground(this, SWVContext.asw_view, fns);
+        Playground playground = new Playground(this, SWVContext.asw_view);
         SWVContext.getPluginManager().setPlayground(playground);
 
         WebSettings webSettings = SWVContext.asw_view.getSettings();
@@ -78,17 +77,14 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setSaveFormData(SWVContext.ASWP_SFORM);
         webSettings.setSupportZoom(SWVContext.ASWP_ZOOM);
 
-        // ===== KODE SAKTI: RESPONSIF GAMBAR & AUTO-FIT LAYAR =====
+        // ===== SAKTI: RESPONSIF GAMBAR & AUTO-FIT LAYAR =====
         webSettings.setLoadWithOverviewMode(true);
         webSettings.setUseWideViewPort(true);
         webSettings.setBuiltInZoomControls(true);
         webSettings.setDisplayZoomControls(false); 
-        // =========================================================
+        // ====================================================
 
         webSettings.setAllowFileAccess(true);
-        webSettings.setAllowFileAccessFromFileURLs(true);
-        webSettings.setAllowUniversalAccessFromFileURLs(true);
-        webSettings.setUseWideViewPort(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
 
@@ -118,6 +114,15 @@ public class MainActivity extends AppCompatActivity {
                 SWVContext.getPluginManager().requestPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, SWVContext.getPluginManager().getPermissionRequestCode(android.Manifest.permission.WRITE_EXTERNAL_STORAGE));
             }
         });
+    }
+
+    // Mengamankan layar aplikasi (untuk Biometric / Keamanan)
+    public void setWindowSecure(boolean secure) {
+        if (secure) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        }
     }
 
     @Override
@@ -183,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void onBackPressed() {
         if (SWVContext.asw_view.canGoBack()) {
             SWVContext.asw_view.goBack();
@@ -210,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Log.d(TAG, "onRequestPermissionsResult called");
 
-        // ANTI-BLANK AUTO REFRESH: Aplikasi otomatis segar bugar pas tombol "Izinkan" diklik pertama kali!
+        // ANTI-BLANK AUTO REFRESH: Otomatis reload saat izin diberikan pertama kali!
         if (grantResults.length > 0 && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
             if (SWVContext.asw_view != null) {
                 SWVContext.asw_view.reload();
