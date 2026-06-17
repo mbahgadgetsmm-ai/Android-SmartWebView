@@ -3,12 +3,10 @@ package mgks.os.swv;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -23,6 +21,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    private final Functions fns = new Functions(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (getIntent() != null && getIntent().getData() != null) {
             String uriString = getIntent().getData().toString();
-            SWVContext.ASW_URL = uriString;
+            SWVConfiguration.asw_url = uriString;
             Log.d(TAG, "Intent URI: " + uriString);
         }
 
@@ -45,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             Log.d(TAG, "onCreate: savedInstanceState is null, loading URL");
-            SWVContext.asw_view.loadUrl(SWVContext.ASW_URL);
+            SWVContext.asw_view.loadUrl(SWVConfiguration.asw_url);
         } else {
             Log.d(TAG, "onCreate: restored WebView state");
             SWVContext.asw_view.restoreState(savedInstanceState);
@@ -55,9 +54,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeWebView() {
-        SWVContext.init(this, SWVContext.asw_view);
+        SWVContext.init(this, SWVContext.asw_view, fns);
 
-        Playground playground = new Playground(this, SWVContext.asw_view);
+        Playground playground = new Playground(this, SWVContext.asw_view, fns);
         SWVContext.getPluginManager().setPlayground(playground);
 
         WebSettings webSettings = SWVContext.asw_view.getSettings();
@@ -77,12 +76,12 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setSaveFormData(SWVContext.ASWP_SFORM);
         webSettings.setSupportZoom(SWVContext.ASWP_ZOOM);
 
-        // ===== SAKTI: RESPONSIF GAMBAR & AUTO-FIT LAYAR =====
+        // ===== SAKTI: PENGATURAN RESPONSIF GAMBAR & AUTO-FIT =====
         webSettings.setLoadWithOverviewMode(true);
         webSettings.setUseWideViewPort(true);
         webSettings.setBuiltInZoomControls(true);
         webSettings.setDisplayZoomControls(false); 
-        // ====================================================
+        // =========================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setDomStorageEnabled(true);
@@ -114,15 +113,6 @@ public class MainActivity extends AppCompatActivity {
                 SWVContext.getPluginManager().requestPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, SWVContext.getPluginManager().getPermissionRequestCode(android.Manifest.permission.WRITE_EXTERNAL_STORAGE));
             }
         });
-    }
-
-    // Mengamankan layar aplikasi (untuk Biometric / Keamanan)
-    public void setWindowSecure(boolean secure) {
-        if (secure) {
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
-        } else {
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-        }
     }
 
     @Override
