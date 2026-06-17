@@ -107,7 +107,6 @@ import mgks.os.swv.plugins.QRScannerPlugin;
  * Handles WebView configuration, lifecycle events and user interactions
  */
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
-    // Class members
     private static final String TAG = "MainActivity";
 
     private boolean isPageLoaded = false;
@@ -316,6 +315,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SWVContext.asw_view = findViewById(R.id.msw_view);
         adContainer = findViewById(R.id.msw_ad_container);
         SWVContext.print_view = findViewById(R.id.print_view);
+        
+        // AMANKAN LAYAR UTAMA: Di awal, WebView disembunyikan total (Alpha 0) agar tidak terjadi kedip putih sekejap
+        if (SWVContext.asw_view != null) {
+            SWVContext.asw_view.setVisibility(View.INVISIBLE);
+        }
     }
 
     private void initializeWebView() {
@@ -340,12 +344,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setJavaScriptEnabled(true);
         webSettings.setSaveFormData(SWVContext.ASWP_SFORM);
 
-        // ===== SINKRONISASI SAKELAR ZOOM CUBIT & RESPONSIVE OTOMATIS =====
+        // KUNCI AUTO-RESPONSIVE + CUBIT ZOOM SINKRON CONFIG PROPERTIS
         webSettings.setSupportZoom(SWVContext.ASWP_ZOOM);          
         webSettings.setBuiltInZoomControls(SWVContext.ASWP_ZOOM);   
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
-        // ================================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
@@ -763,7 +766,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Location permission granted.");
                         
-                        if (SWVContext.asw_view != null) {
+                        // PEMERIKSAAN EXTRA: Jangan dipaksa reload langsung jika halaman sudah siap, agar tidak terjadi kedip loading ulang pas pemindaian selesai
+                        if (SWVContext.asw_view != null && !isPageLoaded) {
                             SWVContext.asw_view.post(() -> SWVContext.asw_view.reload());
                         }
 
@@ -774,7 +778,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Notification permission granted.");
 
-                        if (SWVContext.asw_view != null) {
+                        if (SWVContext.asw_view != null && !isPageLoaded) {
                             SWVContext.asw_view.post(() -> SWVContext.asw_view.reload());
                         }
 
@@ -810,26 +814,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             SWVContext.getPluginManager().onPageFinished(url);
 
-            // ===== ANIMASI TRANSISI HALUS (ANTI BLANK PUTIH) =====
+            // ===== ANIMASI TRANSISI HALUS (PENGUNCI ANTI-BLANK TOTAL) =====
             final View welcomeScreen = findViewById(R.id.msw_welcome);
             final View webViewLayout = findViewById(R.id.msw_view);
 
-            if (webViewLayout != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
+            // Kunci: Hanya eksekusi jika halaman web sudah benar-benar termuat 100% (bukan halaman blank bawaan system)
+            if (webViewLayout != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE && url.startsWith("http")) {
                 webViewLayout.setAlpha(0f);
                 webViewLayout.setVisibility(View.VISIBLE);
                 webViewLayout.animate()
                         .alpha(1f)
-                        .setDuration(500)
+                        .setDuration(600) // Durasi transisi fade-in 0.6 detik agar sangat halus
                         .setListener(null);
 
                 welcomeScreen.animate()
                         .alpha(0f)
-                        .setDuration(500)
+                        .setDuration(600)
                         .withEndAction(() -> welcomeScreen.setVisibility(View.GONE));
+                
+                isPageLoaded = true;
             }
-            // ======================================================
-
-            isPageLoaded = true;
 
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) {
                 fns.inject_gtag(view, SWVContext.ASWV_GTAG);
