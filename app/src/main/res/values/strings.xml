@@ -32,7 +32,7 @@
     <string name="msg_no_internet">Tidak ada koneksi internet!</string>
     <string name="print_error">Gagal mencetak!</string>
     
-    <string name="loading_app" tools:ignore="TypographyEllipsis">Memuat MBAH GADGET...</string>
+    <string name="loading_app" tools:ignore="TypographyEllipsis"></string>
     
     <string name="authenticate">Autentikasi</string>
     <string name="documentation">Dokumentasi</string>
