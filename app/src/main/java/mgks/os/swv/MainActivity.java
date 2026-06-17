@@ -162,30 +162,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         super.onCreate(savedInstanceState);
 
-        // Handle splash screen
+        // Handle splash screen (Extend Splash Screen Penahan Di Sini Sudah Dihapus Biar Langsung Loading Web)
         final SplashScreen splashScreen = androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
 
-        // If extending splash is enabled, set up a listener
-        // Keep the splash screen on-screen if the extend feature is enabled
         final View content = findViewById(android.R.id.content);
-        if (SWVContext.ASWP_EXTEND_SPLASH) {
-            content.getViewTreeObserver().addOnPreDrawListener(
-                new ViewTreeObserver.OnPreDrawListener() {
-                    @Override
-                    public boolean onPreDraw() {
-                        // Check if the page is loaded.
-                        if (isPageLoaded) {
-                            // The content is ready; remove the listener and draw the content.
-                            content.getViewTreeObserver().removeOnPreDrawListener(this);
-                            return true;
-                        } else {
-                            // The content is not ready; don't draw anything, keeping the splash screen visible.
-                            return false;
-                        }
-                    }
-                }
-            );
-        }
 
         permissionManager = new PermissionManager(this);
 
@@ -195,10 +175,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             result -> {
                 Uri[] results = null;
                 if (result.getResultCode() == Activity.RESULT_CANCELED) {
-                    // If the file request was cancelled, we must send a null value
                     if (SWVContext.asw_file_path != null) {
                         SWVContext.asw_file_path.onReceiveValue(null);
-                        SWVContext.asw_file_path = null; // Clear path after use
+                        SWVContext.asw_file_path = null;
                     }
                     return;
                 }
@@ -210,24 +189,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     Intent data = result.getData();
 
-                    // Scenario 1: User selected files from the gallery/file manager
                     if (data != null && (data.getDataString() != null || data.getClipData() != null)) {
                         ClipData clipData = data.getClipData();
                         if (clipData != null) {
-                            // Multiple files selected
                             final int numSelectedFiles = clipData.getItemCount();
                             results = new Uri[numSelectedFiles];
                             for (int i = 0; i < numSelectedFiles; i++) {
                                 results[i] = clipData.getItemAt(i).getUri();
                             }
                         } else if (data.getDataString() != null) {
-                            // Single file selected
                             results = new Uri[]{Uri.parse(data.getDataString())};
                         }
                     }
 
-                    // Scenario 2: User took a photo or video using the camera intent
-                    // If results is still null, check if a camera file path was set before launching the intent
                     if (results == null) {
                         if (SWVContext.asw_pcam_message != null) {
                             results = new Uri[]{Uri.parse(SWVContext.asw_pcam_message)};
@@ -237,13 +211,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }
 
-                // Send the results back to the WebView
                 if (SWVContext.asw_file_path != null) {
                     SWVContext.asw_file_path.onReceiveValue(results);
                     SWVContext.asw_file_path = null;
                 }
 
-                // Clear camera messages after use
                 SWVContext.asw_pcam_message = null;
                 SWVContext.asw_vcam_message = null;
             }
@@ -251,7 +223,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         qrScannerLauncher = registerForActivityResult(new ScanContract(),
                 result -> {
-                    // The result is already a ScanIntentResult, no parsing needed
                     PluginInterface plugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
                     if (plugin instanceof QRScannerPlugin) {
                         ((QRScannerPlugin) plugin).handleScanResult(result);
@@ -269,42 +240,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initializeWebView();
 
         SWVContext.loadPlugins(this);
-        SWVContext.init(this, SWVContext.asw_view, fns); // This initializes the PluginManager and all queued plugins
+        SWVContext.init(this, SWVContext.asw_view, fns);
 
         PluginInterface qrPlugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
         if (qrPlugin instanceof QRScannerPlugin) {
             ((QRScannerPlugin) qrPlugin).setLauncher(qrScannerLauncher);
         }
 
-        // Setup features and handle intents now that plugins are ready
         if (savedInstanceState == null) {
             setupFeatures();
             handleIncomingIntents();
         }
 
-        // Debug mode logging
         if(SWVContext.SWV_DEBUGMODE){
             Log.d(TAG, "URL: "+ SWVContext.CURR_URL+"DEVICE INFO: "+ Arrays.toString(fns.get_info(this)));
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(content, (v, windowInsets) -> {
-            // Get the insets for the system bars (status bar, navigation bar)
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-            // Apply the insets as padding to the root view.
-            // This pushes the entire layout down from the status bar and up from the nav bar.
             v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
-
-            // Return the insets so that other views can also process them if needed.
             return windowInsets;
         });
     }
 
-    /**
-     * Toggles the FLAG_SECURE on the window. Plugins can call this to temporarily
-     * enhance security. This method respects the global security.block.screenshots setting.
-     * @param secure true to add the secure flag, false to attempt to remove it.
-     */
     public void setWindowSecure(boolean secure) {
         runOnUiThread(() -> {
             if (secure) {
@@ -317,13 +275,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    /**
-     * Setup the UI layout based on configuration
-     */
     private void setupLayout() {
         if (SWVContext.ASWV_LAYOUT == 1) {
             setContentView(R.layout.drawer_main);
-            MaterialToolbar toolbar = findViewById(R.id.toolbar); // Use MaterialToolbar
+            MaterialToolbar toolbar = findViewById(R.id.toolbar);
             final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
 
             if (SWVContext.ASWP_DRAWER_HEADER) {
@@ -367,21 +322,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SWVContext.print_view = findViewById(R.id.print_view);
     }
 
-    /**
-     * Initialize WebView and its settings
-     */
     private void initializeWebView() {
-        // Initialize Smart WebView with current context. This will set up the PluginManager.
         SWVContext.init(this, SWVContext.asw_view, fns);
 
-        // Instantiate Playground and register it with the manager
         Playground playground = new Playground(this, SWVContext.asw_view, fns);
         SWVContext.getPluginManager().setPlayground(playground);
 
-        // Configure WebView settings
         WebSettings webSettings = SWVContext.asw_view.getSettings();
 
-        // Configure user agent
         if (SWVContext.OVERRIDE_USER_AGENT || SWVContext.POSTFIX_USER_AGENT) {
             String userAgent = webSettings.getUserAgentString();
             if (SWVContext.OVERRIDE_USER_AGENT) {
@@ -393,7 +341,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             webSettings.setUserAgentString(userAgent);
         }
 
-        // Configure WebView settings
         webSettings.setJavaScriptEnabled(true);
         webSettings.setSaveFormData(SWVContext.ASWP_SFORM);
         webSettings.setSupportZoom(SWVContext.ASWP_ZOOM);
@@ -404,34 +351,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setDomStorageEnabled(true);
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
-        // Allow third-party cookies for captcha, social logins, etc.
         if (SWVContext.ASWP_ACCEPT_THIRD_PARTY_COOKIES) {
             CookieManager.getInstance().setAcceptThirdPartyCookies(SWVContext.asw_view, true);
         }
 
-        // Disable copy-paste if configured
         if (!SWVContext.ASWP_COPYPASTE) {
             SWVContext.asw_view.setOnLongClickListener(v -> true);
         }
 
-        // Set WebView properties
         SWVContext.asw_view.setHapticFeedbackEnabled(false);
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         SWVContext.asw_view.setVerticalScrollBarEnabled(false);
 
-        // Set WebView clients
         SWVContext.asw_view.setWebViewClient(new WebViewCallback());
         SWVContext.asw_view.setWebChromeClient(createWebChromeClient());
         SWVContext.asw_view.setBackgroundColor(getColor(R.color.colorPrimary));
         SWVContext.asw_view.addJavascriptInterface(new WebAppInterface(), "AndroidInterface");
 
-        // Setup download listener
         setupDownloadListener();
     }
 
-    /**
-     * Setup the download listener for WebView
-     */
     private void setupDownloadListener() {
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
             if (!permissionManager.isStoragePermissionGranted()) {
@@ -459,9 +398,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    /**
-     * Create the WebChromeClient for WebView
-     */
     private WebChromeClient createWebChromeClient() {
         return new WebChromeClient() {
             @Override
@@ -501,11 +437,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         };
     }
 
-    /**
-     * Setup various features based on configuration
-     */
     private void setupFeatures() {
-        // Setup service worker if supported
         ServiceWorkerController.getInstance().setServiceWorkerClient(new ServiceWorkerClient() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
@@ -513,19 +445,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        // Prevent app from being started again when it is still alive in the background
         if (!isTaskRoot()) {
             finish();
             return;
         }
 
-        // Initialize notification channel on Android 8+
         setupNotificationChannel();
-
-        // Setup swipe refresh functionality
         setupSwipeRefresh();
 
-        // Setup progress bar if enabled
         if (SWVContext.ASWP_PBAR) {
             SWVContext.asw_progress = findViewById(R.id.msw_progress);
         } else {
@@ -533,19 +460,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         SWVContext.asw_loading_text = findViewById(R.id.msw_loading_text);
 
-        // Log device info and handle location permissions
         fns.get_info(this);
 
-        // A Centralized Permission Request on Launch
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             permissionManager.requestInitialPermissions();
         }, 1500);
 
-        // Get FCM token for notifications
         setupFirebaseMessaging();
     }
 
-    // Options menu for drawer theme
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
@@ -576,7 +499,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    // Options trigger for drawer theme
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_exit) {
@@ -586,14 +508,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Navigation menu item setup, config in SWVContext.java
-     */
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-
-        // Look up the configuration for the clicked item
         SWVContext.NavItem navItem = SWVContext.ASWV_DRAWER_MENU.get(id);
 
         if (navItem != null) {
@@ -613,7 +530,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.w(TAG, "No action configured for menu item ID: " + id);
         }
 
-        // Close the drawer
         if (SWVContext.ASWV_LAYOUT == 1) {
             DrawerLayout drawer = findViewById(R.id.drawer_layout);
             if (drawer != null) {
@@ -623,9 +539,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    /**
-     * Setup notification channel for Android Oreo and above
-     */
     private void setupNotificationChannel() {
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationManager notificationManager =
@@ -647,9 +560,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    /**
-     * Setup swipe refresh functionality
-     */
     private void setupSwipeRefresh() {
         final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
 
@@ -667,18 +577,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    /**
-     * Sets the app's theme to light or dark and restarts the activity to apply changes.
-     * @param isDarkMode true for dark mode, false for light mode.
-     */
     private void setAppTheme(boolean isDarkMode) {
         int mode = isDarkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
         AppCompatDelegate.setDefaultNightMode(mode);
     }
 
-    /**
-     * Setup Firebase Cloud Messaging
-     */
     private void setupFirebaseMessaging() {
         fns.fcm_token(new Functions.TokenCallback() {
             @Override
@@ -693,9 +596,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    /**
-     * Handle incoming intents for notifications, shared content, etc.
-     */
     private void handleIncomingIntents() {
         Intent intent = getIntent();
         Log.d(TAG, "Intent: " + intent.toUri(0));
@@ -722,9 +622,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    /**
-     * Handle shared text content
-     */
     private void handleSharedText(String share) {
         Log.d(TAG, "Share text intent: " + share);
 
@@ -813,7 +710,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
+        super.outState(outState);
         SWVContext.asw_view.saveState(outState);
         if (SWVContext.asw_view.getUrl() != null) {
             outState.putString("swv_last_url", SWVContext.asw_view.getUrl());
@@ -867,7 +764,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Location permission granted.");
                         
-                        // SAKTI: Begitu izin lokasi diberikan, langsung paksa web loading otomatis!
                         if (SWVContext.asw_view != null) {
                             SWVContext.asw_view.post(() -> SWVContext.asw_view.reload());
                         }
@@ -879,7 +775,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Notification permission granted.");
 
-                        // SAKTI: Begitu izin notifikasi diberikan, langsung paksa web loading otomatis!
                         if (SWVContext.asw_view != null) {
                             SWVContext.asw_view.post(() -> SWVContext.asw_view.reload());
                         }
