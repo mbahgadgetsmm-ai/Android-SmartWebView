@@ -162,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         super.onCreate(savedInstanceState);
 
-        // Handle splash screen (Extend Splash Screen Penahan Di Sini Sudah Dihapus Biar Langsung Loading Web)
+        // Handle splash screen
         final SplashScreen splashScreen = androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
 
         final View content = findViewById(android.R.id.content);
@@ -710,7 +710,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.outState(outState);
+        super.onSaveInstanceState(outState); // FIKSED: Di sini tipe fungsi super-nya sudah benar
         SWVContext.asw_view.saveState(outState);
         if (SWVContext.asw_view.getUrl() != null) {
             outState.putString("swv_last_url", SWVContext.asw_view.getUrl());
