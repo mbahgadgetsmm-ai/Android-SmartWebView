@@ -340,11 +340,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setJavaScriptEnabled(true);
         webSettings.setSaveFormData(SWVContext.ASWP_SFORM);
 
-        // KUNCI AUTO-RESPONSIVE SEMUA PERANGKAT YANG SUDAH KITA SETTING SEBELUMNYA
+        // ===== SINKRONISASI SAKELAR ZOOM CUBIT & RESPONSIVE OTOMATIS =====
         webSettings.setSupportZoom(SWVContext.ASWP_ZOOM);          
         webSettings.setBuiltInZoomControls(SWVContext.ASWP_ZOOM);   
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
+        // ================================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
