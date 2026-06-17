@@ -340,12 +340,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setJavaScriptEnabled(true);
         webSettings.setSaveFormData(SWVContext.ASWP_SFORM);
 
-        // ===== KUNCI AUTO RESPONSIVE SEMUA PERANGKAT & MATIKAN CUBIT ZOOM =====
-        webSettings.setSupportZoom(false);          
-        webSettings.setBuiltInZoomControls(false);   
+        // KUNCI AUTO-RESPONSIVE SEMUA PERANGKAT YANG SUDAH KITA SETTING SEBELUMNYA
+        webSettings.setSupportZoom(SWVContext.ASWP_ZOOM);          
+        webSettings.setBuiltInZoomControls(SWVContext.ASWP_ZOOM);   
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
-        // ======================================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
@@ -810,8 +809,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             SWVContext.getPluginManager().onPageFinished(url);
 
-            findViewById(R.id.msw_welcome).setVisibility(View.GONE);
-            findViewById(R.id.msw_view).setVisibility(View.VISIBLE);
+            // ===== ANIMASI TRANSISI HALUS (ANTI BLANK PUTIH) =====
+            final View welcomeScreen = findViewById(R.id.msw_welcome);
+            final View webViewLayout = findViewById(R.id.msw_view);
+
+            if (webViewLayout != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
+                webViewLayout.setAlpha(0f);
+                webViewLayout.setVisibility(View.VISIBLE);
+                webViewLayout.animate()
+                        .alpha(1f)
+                        .setDuration(500)
+                        .setListener(null);
+
+                welcomeScreen.animate()
+                        .alpha(0f)
+                        .setDuration(500)
+                        .withEndAction(() -> welcomeScreen.setVisibility(View.GONE));
+            }
+            // ======================================================
+
             isPageLoaded = true;
 
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) {
