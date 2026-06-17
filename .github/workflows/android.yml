@@ -18,6 +18,19 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Force Custom Mbah Gadget Icon
+        run: |
+          cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
 
