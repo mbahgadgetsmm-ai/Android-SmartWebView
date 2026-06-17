@@ -23,6 +23,9 @@ jobs:
           # Hapus semua ikon bawaan berformat .webp biar tidak bentrok
           rm -f app/src/main/res/mipmap-*/ic_launcher.webp
           rm -f app/src/main/res/mipmap-*/ic_launcher_round.webp
+          
+          # Hapus folder anydpi-v26 yang sering mengunci logo bawaan di Android versi baru
+          rm -rf app/src/main/res/mipmap-anydpi-v26
 
           # Masukkan logo baru MBAH GADGET Anda ke semua folder resolusi
           cp app/src/main/ic_launcher-playstore.png app/src/main/res/mipmap-hdpi/ic_launcher.png
