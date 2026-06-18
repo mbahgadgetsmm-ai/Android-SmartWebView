@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ONE SIGNAL FIXED BUILD (DOWNLOAD & BULAT SPINNER LOADING FIX FINAL)
+  Smart WebView v8 - MBAH GADGET ONE SIGNAL FIXED BUILD (DOWNLOAD, LOADING & SPINNER STUCK FIX FINAL)
 */
 
 import android.Manifest;
@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private boolean isPageLoaded = false;
 
-    static Functions fns = new Functions();
+    static Functions fns = fns != null ? fns : new Functions();
     private FileProcessing fileProcessing;
     private LinearLayout adContainer;
     private PermissionManager permissionManager;
@@ -434,13 +434,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (SWVContext.ASWP_PBAR) {
                     if (SWVContext.asw_progress == null) SWVContext.asw_progress = findViewById(R.id.msw_progress);
                     
-                    // Menonaktifkan progress bar garis
                     if (p < 100) {
                         SWVContext.asw_progress.setVisibility(View.VISIBLE);
                         SWVContext.asw_progress.setProgress(p);
                     } else {
                         SWVContext.asw_progress.setProgress(100);
                         SWVContext.asw_progress.setVisibility(View.GONE);
+                    }
+                }
+
+                // 🔥 JURUS JALAN PINTAS SAKTI (ANTI-STUCK PASCA-INSTAL): Tembak mati Spinner Bulat jika render web > 85%
+                if (p > 85) {
+                    final View welcomeScreen = findViewById(R.id.msw_welcome);
+                    final View webViewLayout = findViewById(R.id.msw_view);
+                    if (webViewLayout != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
+                        webViewLayout.setAlpha(1f);
+                        webViewLayout.setVisibility(View.VISIBLE);
+                        welcomeScreen.setVisibility(View.GONE);
                     }
                 }
             }
@@ -822,7 +832,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             final View welcomeScreen = findViewById(R.id.msw_welcome);
             final View webViewLayout = findViewById(R.id.msw_view);
 
-            // FIX UTAMA SPINNER BULAT GANTUNG: Hapus syarat validasi kaku 'url.startsWith'
             if (webViewLayout != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
                 webViewLayout.setAlpha(0f);
                 webViewLayout.setVisibility(View.VISIBLE);
