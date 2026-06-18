@@ -33,10 +33,12 @@ def getSwvProperties() {
 def swvProps = getSwvProperties()
 
 android {
-	namespace swvProps.getProperty('build.application.id', 'mgks.os.swv')
+	// KUNCI COORD/KOMPAS JAVA INTERNAL AGAR TIDAK EROR KELAS R
+	namespace 'mgks.os.swv'
 	compileSdk swvProps.getProperty('build.sdk.compile', '36').toInteger()
 
 	defaultConfig {
+		// ID APLIKASI DI HP TETAP MEMBACA OTOMATIS com.mbah.gadget DARI PROPERTIS
 		applicationId swvProps.getProperty('build.application.id', 'mgks.os.swv')
 		minSdk swvProps.getProperty('build.sdk.min', '24').toInteger()
 		targetSdk swvProps.getProperty('build.sdk.compile', '36').toInteger()
