@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ULTRA SPEED CACHE & GPU BUILD (FIXED FOR SDK 36)
+  Smart WebView v8 - MBAH GADGET ULTRA SPEED CACHE & GPU BUILD (FIXED 8.0.7)
 */
 
 import android.Manifest;
@@ -526,7 +526,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     startActivity(Intent.createChooser(intent, "Send Email"));
                 } catch (android.content.ActivityNotFoundException ex) {
-                    Toast.makeText(this, "No email app found.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "No email app found.", Toast.SHORT).show();
                 }
             } else {
                 fns.aswm_view(action, false, 0, this);
@@ -714,7 +714,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.outState.clear(); 
+        outState.clear(); // FIX: Menghapus super.outState menjadi outState langsung bawaan fungsi parameter
         super.onSaveInstanceState(outState);
         SWVContext.asw_view.saveState(outState);
         if (SWVContext.asw_view.getUrl() != null) {
