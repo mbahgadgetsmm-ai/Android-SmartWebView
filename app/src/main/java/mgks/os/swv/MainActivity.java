@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private boolean isPageLoaded = false;
 
-    static Functions fns = fns != null ? fns : new Functions();
+    static Functions fns = new Functions();
     private FileProcessing fileProcessing;
     private LinearLayout adContainer;
     private PermissionManager permissionManager;
@@ -443,7 +443,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }
 
-                // 🔥 JURUS JALAN PINTAS SAKTI (ANTI-STUCK PASCA-INSTAL): Tembak mati Spinner Bulat jika render web > 85%
                 if (p > 85) {
                     final View welcomeScreen = findViewById(R.id.msw_welcome);
                     final View webViewLayout = findViewById(R.id.msw_view);
