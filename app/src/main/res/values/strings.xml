@@ -9,7 +9,7 @@
     <string name="mgks_promo">mbahgadget.co.id</string>
     <string name="loc_fail">Gagal Menemukan Lokasi</string>
     <string name="loc_fail_text">Silakan Periksa GPS Anda.</string>
-    <string name="loc_fail_more">Pastikan GPS Anda aktif dan dalam mode akurasi tinggi.</string>
+    <string name="loc_fail_more">Pastikan GPS Anda aktif and dalam mode akurasi tinggi.</string>
     <string name="loc_perm">Izinkan Akses Lokasi</string>
     <string name="loc_perm_text">Berikan aplikasi ini izin untuk memeriksa lokasi Anda.</string>
     <string name="loc_perm_more">Mohon izinkan akses lokasi untuk menghitung ongkos kirim secara akurat.</string>
