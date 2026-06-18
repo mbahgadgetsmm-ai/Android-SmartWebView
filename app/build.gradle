@@ -1,5 +1,5 @@
 /*
-  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD
+  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD (FIXED FOR GRADLE 8+)
 */
 
 plugins {
@@ -19,32 +19,32 @@ def getSwvProperties() {
 def swvProps = getSwvProperties()
 
 android {
-	namespace 'mgks.os.swv'
-	compileSdk swvProps.getProperty('build.sdk.compile', '36').toInteger()
+	namespace = 'mgks.os.swv'
+	compileSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
 
 	defaultConfig {
-		applicationId swvProps.getProperty('build.application.id', 'com.mbah.gadget')
-		minSdk swvProps.getProperty('build.sdk.min', '24').toInteger()
-		targetSdk swvProps.getProperty('build.sdk.compile', '36').toInteger()
-		versionCode 12
-		versionName "8.0.5"
-		multiDexEnabled true
+		applicationId = swvProps.getProperty('build.application.id', 'com.mbah.gadget')
+		minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
+		targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
+		versionCode = 12
+		versionName = "8.0.5"
+		multiDexEnabled = true
 	}
 
 	buildTypes {
 		release {
-			minifyEnabled false
+			minifyEnabled = false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}
 	}
 
 	buildFeatures {
-		buildConfig true
+		buildConfig = true
 	}
 
 	compileOptions {
-		sourceCompatibility JavaVersion.VERSION_17
-		targetCompatibility JavaVersion.VERSION_17
+		sourceCompatibility = JavaVersion.VERSION_17
+		targetCompatibility = JavaVersion.VERSION_17
 	}
 }
 
