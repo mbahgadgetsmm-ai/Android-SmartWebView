@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ULTRA SPEED CACHE & GPU BUILD
+  Smart WebView v8 - MBAH GADGET ULTRA SPEED CACHE & GPU BUILD (FIXED)
 */
 
 import android.Manifest;
@@ -333,17 +333,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
-        // ===== 🚀 TURBO SPEED CACHE KUNCI INTERNAL + GPU ACCELERATION 🚀 =====
+        // ===== 🚀 TURBO SPEED CACHE + AKSELERASI HARDWARE GPU (FIXED ANDROID 36) 🚀 =====
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK); 
         webSettings.setDomStorageEnabled(true);    
         webSettings.setDatabaseEnabled(true);       
-        webSettings.setAppCacheEnabled(true);
-        webSettings.setAppCachePath(getApplicationContext().getCacheDir().getAbsolutePath());
         
+        // Mengaktifkan akselerasi perangkat keras
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH); 
         webSettings.setEnableSmoothTransition(true);                   
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null); 
-        // =====================================================================
+        // ===============================================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
@@ -571,16 +570,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
 
         if (SWVContext.ASWP_PULLFRESH) {
-            pullRefresh.setOnRefreshListener(() -> {
-                fns.pull_fresh(MainActivity.this);
-                pullRefresh.setRefreshing(false);
-            });
+            pullRefresh.setOnRefreshListener(() -> fns.pull_fresh(MainActivity.this));
 
             SWVContext.asw_view.getViewTreeObserver().addOnScrollChangedListener(
                     () -> pullRefresh.setEnabled(SWVContext.asw_view.getScrollY() == 0));
         } else {
-            pullRefresh.setRefreshing(false);
-            pullRefresh.setEnabled(false);
+            if (pullRefresh != null) {
+                pullRefresh.setRefreshing(false);
+                pullRefresh.setEnabled(false);
+            }
         }
     }
 
