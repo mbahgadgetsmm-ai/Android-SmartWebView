@@ -316,6 +316,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         adContainer = findViewById(R.id.msw_ad_container);
         SWVContext.print_view = findViewById(R.id.print_view);
         
+        // BOOSTER ANTI-KEDIP: Sembunyikan WebView di awal agar latar putih bawaan sistem tidak kelihatan
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.setVisibility(View.INVISIBLE);
         }
@@ -343,18 +344,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setJavaScriptEnabled(true);
         webSettings.setSaveFormData(SWVContext.ASWP_SFORM);
 
-        // KUNCI AUTO-RESPONSIVE + CUBIT ZOOM SINKRON CONFIG PROPERTIS
+        // KUNCI AUTO-RESPONSIVE + CUBIT ZOOM SINKRON CONFIG PROPERTIES
         webSettings.setSupportZoom(SWVContext.ASWP_ZOOM);          
         webSettings.setBuiltInZoomControls(SWVContext.ASWP_ZOOM);   
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
-        // ===== BOOSTER SAKTI: PERFORMANCE ULTRA HIGH SPEED =====
+        // ===== BOOSTER ULTRA SPEED: CACHE KUNCI INTERNAL + GPU ACCELERATION =====
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK); 
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH); 
         webSettings.setEnableSmoothTransition(true);                   
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null); 
-        // =======================================================
+        // ========================================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
@@ -370,6 +371,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.setOnLongClickListener(v -> true);
         }
 
+        // Optimalisasi WebView ringan
         SWVContext.asw_view.setHapticFeedbackEnabled(false);
         SWVContext.asw_view.setVerticalScrollBarEnabled(false);
 
@@ -771,6 +773,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Location permission granted.");
                         
+                        // KUNCI EXTRA: Cegah kedip refresh saat scanning antivirus selesai
                         if (SWVContext.asw_view != null && !isPageLoaded) {
                             SWVContext.asw_view.post(() -> SWVContext.asw_view.reload());
                         }
