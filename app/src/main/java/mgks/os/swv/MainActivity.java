@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ONE SIGNAL FIXED BUILD (DOWNLOAD FIX FINAL)
+  Smart WebView v8 - MBAH GADGET ONE SIGNAL FIXED BUILD (DOWNLOAD & BULAT SPINNER LOADING FIX FINAL)
 */
 
 import android.Manifest;
@@ -368,7 +368,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             try {
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
                 
-                // 1. Logika Perbaikan Tipe Konten Gambar/Video (Penangkal Format .bin)
                 String finalMimeType = mimeType;
                 if (finalMimeType == null || finalMimeType.equalsIgnoreCase("application/octet-stream")) {
                     if (url.contains(".png") || contentDisposition.contains(".png")) {
@@ -378,12 +377,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     } else if (url.contains(".mp4") || contentDisposition.contains(".mp4")) {
                         finalMimeType = "video/mp4";
                     } else {
-                        finalMimeType = "image/png"; // Otomatis paksa ke PNG untuk keperluan QRIS deposit
+                        finalMimeType = "image/png";
                     }
                 }
                 request.setMimeType(finalMimeType);
 
-                // 2. Koreksi Nama dan Ekstensi File Eksternal
                 String fileName = URLUtil.guessFileName(url, contentDisposition, finalMimeType);
                 if (!fileName.contains(".")) {
                     if (finalMimeType.contains("video/")) {
@@ -399,7 +397,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 request.setDescription(getString(R.string.dl_downloading));
                 request.setTitle(fileName);
                 
-                // 3. Simpan ke Folder Download Publik (Menghilangkan Masalah Peringatan Izin Penyimpanan Kaku)
                 request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
                 request.allowScanningByMediaScanner();
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
@@ -436,9 +433,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onProgressChanged(WebView view, int p) {
                 if (SWVContext.ASWP_PBAR) {
                     if (SWVContext.asw_progress == null) SWVContext.asw_progress = findViewById(R.id.msw_progress);
-                    SWVContext.asw_progress.setProgress(p);
-                    if (p == 100) {
-                        SWVContext.asw_progress.setProgress(0);
+                    
+                    // Menonaktifkan progress bar garis
+                    if (p < 100) {
+                        SWVContext.asw_progress.setVisibility(View.VISIBLE);
+                        SWVContext.asw_progress.setProgress(p);
+                    } else {
+                        SWVContext.asw_progress.setProgress(100);
+                        SWVContext.asw_progress.setVisibility(View.GONE);
                     }
                 }
             }
@@ -785,7 +787,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Location permission granted.");
-                        if (SWVContext.asw_view != null && !isPageLoaded) {
+                        if (SWVContext.asw_view != null) {
                             SWVContext.asw_view.post(() -> SWVContext.asw_view.reload());
                         }
                     } else {
@@ -794,7 +796,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } else if (permissions[i].equals(Manifest.permission.POST_NOTIFICATIONS)) {
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Notification permission granted.");
-                        if (SWVContext.asw_view != null && !isPageLoaded) {
+                        if (SWVContext.asw_view != null) {
                             SWVContext.asw_view.post(() -> SWVContext.asw_view.reload());
                         }
                     } else {
@@ -820,12 +822,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             final View welcomeScreen = findViewById(R.id.msw_welcome);
             final View webViewLayout = findViewById(R.id.msw_view);
 
-            if (webViewLayout != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE && url.startsWith("http")) {
+            // FIX UTAMA SPINNER BULAT GANTUNG: Hapus syarat validasi kaku 'url.startsWith'
+            if (webViewLayout != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
                 webViewLayout.setAlpha(0f);
                 webViewLayout.setVisibility(View.VISIBLE);
                 webViewLayout.animate().alpha(1f).setDuration(600).setListener(null);
                 welcomeScreen.animate().alpha(0f).setDuration(600).withEndAction(() -> welcomeScreen.setVisibility(View.GONE));
-                isPageLoaded = true;
             }
 
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) {
