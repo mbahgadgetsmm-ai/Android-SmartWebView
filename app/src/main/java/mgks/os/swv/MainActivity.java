@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ANTI-BLANK RESUME FORCE RELOAD BUILD
+  Smart WebView v8 - MBAH GADGET ANTI-BLANK RESUME FORCE RELOAD BUILD (FIXED FINAL)
 */
 
 import android.Manifest;
@@ -476,27 +476,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final SearchView searchView = (SearchView) menu.findItem(R.id.menu_search).getActionView();
         if (searchView != null) {
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        }
-        if (searchView != null) {
             searchView.setQueryHint(getString(R.string.search_hint));
+            searchView.setIconified(true);
+            // FIX TYPO: Menggunakan setIconifiedByDefault bawaan Android yang sah
+            searchView.setIconifiedByDefault(true);
+            searchView.clearFocus();
+
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                public boolean onQueryTextSubmit(String query) {
+                    searchView.clearFocus();
+                    fns.aswm_view(SWVContext.ASWV_SEARCH + query, false, SWVContext.asw_error_counter, MainActivity.this);
+                    searchView.setQuery(query, false);
+                    return false;
+                }
+
+                public boolean onQueryTextChange(String query) {
+                    return false;
+                }
+            });
         }
-        assert searchView != null;
-        searchView.setIconified(true);
-        searchView.setIconByDefault(true);
-        searchView.clearFocus();
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            public boolean onQueryTextSubmit(String query) {
-                searchView.clearFocus();
-                fns.aswm_view(SWVContext.ASWV_SEARCH + query, false, SWVContext.asw_error_counter, MainActivity.this);
-                searchView.setQuery(query, false);
-                return false;
-            }
-
-            public boolean onQueryTextChange(String query) {
-                return false;
-            }
-        });
         return true;
     }
 
@@ -681,9 +679,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 getString(R.string.app_name), bm, getColor(R.color.colorPrimary));
         setTaskDescription(taskDesc);
 
-        // 🔥 JURUS JALAN PINTAS: Jika user kembali masuk ke aplikasi pasca-instalasi/scanning, paksa WebView reload halaman utama 🔥
+        // 🔥 JURUS JALAN PINTAS ANTI-BLANK: Jika kembali dari suspensi scanning antivirus, paksa WebView reload halaman utama segar 🔥
         if (isFirstLaunchScanCheck && SWVContext.asw_view != null) {
-            isFirstLaunchScanCheck = false; // Matikan pengunci agar fungsi reload ini tidak mengganggu aktivitas browsing selanjutnya
+            isFirstLaunchScanCheck = false; // Matikan pengunci otomatis agar tidak mengganggu aktivitas browsing selanjutnya
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 try {
                     Log.w(TAG, "Mbah Gadget mendeteksi Anda kembali masuk ke aplikasi pasca pemindaian. Memaksa pemuatan ulang alamat toko...");
@@ -692,7 +690,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } catch (Exception e) {
                     Log.e(TAG, "Gagal memicu hard reload on resume", e);
                 }
-            }, 300); // Jeda singkat 300ms agar mesin WebView siap menerima perintah render baru
+            }, 300); // Jeda singkat memberikan waktu mesin WebView siap memproses rendering grafis
         }
     }
 
