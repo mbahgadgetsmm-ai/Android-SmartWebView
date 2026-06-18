@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET SUPER SMOOTH BACKGROUND THREAD BUILD (FIXED FINAL)
+  Smart WebView v8 - MBAH GADGET SUPER SMOOTH & CLEAN BUILD (NO REFRESH SPINNER)
 */
 
 import android.Manifest;
@@ -600,12 +600,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void setupSwipeRefresh() {
         final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
 
-        if (SWVContext.ASWP_PULLFRESH) {
-            pullRefresh.setOnRefreshListener(() -> fns.pull_fresh(MainActivity.this));
-
-            SWVContext.asw_view.getViewTreeObserver().addOnScrollChangedListener(
-                    () -> pullRefresh.setEnabled(SWVContext.asw_view.getScrollY() == 0));
-        } else {
+        // 🔥 BANTAI MATI SPINNER MUTER: Fitur tarik-refresh dikunci mati permanen
+        if (pullRefresh != null) {
             pullRefresh.setRefreshing(false);
             pullRefresh.setEnabled(false);
         }
