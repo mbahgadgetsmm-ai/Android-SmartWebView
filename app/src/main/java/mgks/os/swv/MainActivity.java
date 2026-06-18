@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ULTRA SPEED CACHE & GPU BUILD (FIXED)
+  Smart WebView v8 - MBAH GADGET ULTRA SPEED CACHE & GPU BUILD (FIXED FOR SDK 36)
 */
 
 import android.Manifest;
@@ -333,16 +333,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
-        // ===== 🚀 TURBO SPEED CACHE + AKSELERASI HARDWARE GPU (FIXED ANDROID 36) 🚀 =====
+        // ===== 🚀 TURBO SPEED CACHE INTERNAL + ACCELERATION (FIXED FOR ANDROID MODERN) 🚀 =====
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK); 
         webSettings.setDomStorageEnabled(true);    
         webSettings.setDatabaseEnabled(true);       
         
-        // Mengaktifkan akselerasi perangkat keras
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH); 
         webSettings.setEnableSmoothTransition(true);                   
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null); 
-        // ===============================================================================
+        // ======================================================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
@@ -715,6 +714,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.outState.clear(); 
         super.onSaveInstanceState(outState);
         SWVContext.asw_view.saveState(outState);
         if (SWVContext.asw_view.getUrl() != null) {
