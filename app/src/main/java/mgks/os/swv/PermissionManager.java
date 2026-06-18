@@ -1,20 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8
-  https://github.com/mgks/Android-SmartWebView
-
-  A modern, open-source WebView wrapper for building advanced hybrid Android apps.
-  Native features, modular plugins, and full customisation—built for developers.
-
-  - Documentation: https://mgks.github.io/Android-SmartWebView/documentation
-  - Plugins: https://mgks.github.io/Android-SmartWebView/documentation/plugins
-  - Discussions: https://github.com/mgks/Android-SmartWebView/discussions
-  - Sponsor the Project: https://github.com/sponsors/mgks
-
-  MIT License — https://opensource.org/licenses/MIT
-
-  Mentioning Smart WebView in your project helps others find it and keeps the dev loop alive.
+  Smart WebView v8 - MBAH GADGET BATCH PERMISSION ENGINE (FIXED FINAL)
 */
 
 import android.Manifest;
@@ -31,9 +18,6 @@ public class PermissionManager {
 
     private static final String TAG = "PermissionManager";
 
-    // --- Permission Request Codes ---
-    // We use a single code for the initial batch request for simplicity.
-    // Individual requests (like from a plugin) can use their own codes.
     public static final int INITIAL_REQUEST_CODE = 100;
     public static final int CAMERA_REQUEST_CODE = 101;
     public static final int STORAGE_REQUEST_CODE = 102;
@@ -45,55 +29,42 @@ public class PermissionManager {
     }
 
     /**
-     * Checks all configured features in swv.properties and requests the
-     * required permissions in a single batch.
-     * This should be called on app launch.
+     * Memaksa penembakan batch permission sekaligus di detik pertama pasca instal
+     * Mencakup: Lokasi, Notifikasi, serta Media Foto & Video (Tanpa Kamera)
      */
     public void requestInitialPermissions() {
         List<String> permissionsToRequest = new ArrayList<>();
 
-        // Iterate through the permission groups defined in SWVContext config.
-        for (String permissionGroup : SWVContext.ASWP_REQUIRED_PERMISSIONS) {
-            switch (permissionGroup) {
-                case "LOCATION":
-                    if (!isLocationPermissionGranted()) {
-                        permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION);
-                    }
-                    break;
+        // 1. Validasi Izin Lokasi
+        if (!isLocationPermissionGranted()) {
+            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
 
-                case "NOTIFICATIONS":
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isNotificationPermissionGranted()) {
-                        permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
-                    }
-                    break;
+        // 2. Validasi Izin Notifikasi (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isNotificationPermissionGranted()) {
+            permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
+        }
 
-                case "STORAGE":
-                    // Note: It's often better to request storage/media contextually.
-                    // But if required on launch, this handles it.
-                    if (SWVContext.ASWP_FUPLOAD && !isStoragePermissionGranted()) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            permissionsToRequest.add(Manifest.permission.READ_MEDIA_IMAGES);
-                        } else {
-                            permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-                        }
-                    }
-                    break;
+        // 3. Validasi Izin Media Galeri Foto & Video
+        if (!isStoragePermissionGranted()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permissionsToRequest.add(Manifest.permission.READ_MEDIA_IMAGES);
+                permissionsToRequest.add(Manifest.permission.READ_MEDIA_VIDEO);
+            } else {
+                permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE);
             }
         }
 
-        // If there are permissions to request, request them all at once.
+        // Tembak popup beruntun jika ada yang belum diizinkan
         if (!permissionsToRequest.isEmpty()) {
-            Log.d(TAG, "Requesting initial permissions: " + permissionsToRequest);
+            Log.d(TAG, "Mbah Gadget memicu batch request di awal: " + permissionsToRequest);
             ActivityCompat.requestPermissions(activity, permissionsToRequest.toArray(new String[0]), INITIAL_REQUEST_CODE);
         } else {
-            Log.d(TAG, "All initial permissions are already granted.");
+            Log.d(TAG, "Seluruh izin awal sudah aman.");
         }
     }
 
-    /**
-     * A dedicated method to request camera permissions when needed.
-     * This is better for user context than asking on launch.
-     */
     public void requestCameraPermission() {
         if (!isCameraPermissionGranted()) {
             List<String> permissions = new ArrayList<>();
@@ -101,6 +72,7 @@ public class PermissionManager {
             if (!isStoragePermissionGranted()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     permissions.add(Manifest.permission.READ_MEDIA_IMAGES);
+                    permissions.add(Manifest.permission.READ_MEDIA_VIDEO);
                 } else {
                     permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
                 }
@@ -108,8 +80,6 @@ public class PermissionManager {
             ActivityCompat.requestPermissions(activity, permissions.toArray(new String[0]), CAMERA_REQUEST_CODE);
         }
     }
-
-    // --- Helper methods to check permission status ---
 
     public boolean isLocationPermissionGranted() {
         return ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
@@ -119,7 +89,7 @@ public class PermissionManager {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             return ContextCompat.checkSelfPermission(activity, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
         }
-        return true; // Notifications permission not required before Android 13
+        return true;
     }
 
     public boolean isCameraPermissionGranted() {
@@ -128,7 +98,8 @@ public class PermissionManager {
 
     public boolean isStoragePermissionGranted() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+            return ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED &&
+                   ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED;
         }
         return ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
