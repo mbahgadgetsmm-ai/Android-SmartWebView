@@ -26,8 +26,8 @@ android {
 		applicationId = swvProps.getProperty('build.application.id', 'com.mbah.gadget')
 		minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
 		targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
-		versionCode = 14
-		versionName = "8.0.7"
+		versionCode = 15
+		versionName = "8.0.8"
 		multiDexEnabled = true
 	}
 
