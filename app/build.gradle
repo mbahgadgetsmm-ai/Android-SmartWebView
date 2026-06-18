@@ -1,5 +1,5 @@
 /*
-  Smart WebView v8 - MBAH GADGET FIXED BUILD
+  Smart WebView v8 - MBAH GADGET NO-CACHE BUILD
 */
 
 plugins {
@@ -23,11 +23,11 @@ android {
 	compileSdk swvProps.getProperty('build.sdk.compile', '36').toInteger()
 
 	defaultConfig {
-		applicationId swvProps.getProperty('build.application.id', 'mgks.os.swv')
+		applicationId swvProps.getProperty('build.application.id', 'com.mbah.gadget')
 		minSdk swvProps.getProperty('build.sdk.min', '24').toInteger()
 		targetSdk swvProps.getProperty('build.sdk.compile', '36').toInteger()
-		versionCode swvProps.getProperty('build.version.code', '1').toInteger()
-		versionName swvProps.getProperty('build.version.name', '1.0')
+		versionCode 11
+		versionName "8.0.4"
 		multiDexEnabled true
 	}
 
@@ -74,7 +74,7 @@ dependencies {
 	implementation 'androidx.browser:browser:1.10.0'
 	implementation 'androidx.work:work-runtime:2.11.2'
 
-	// SDK UTAMA ONESIGNAL (DENGAN VERSI STABIL KODE LAMA AGAR SINKRON DENGAN PABRIKAN SMART WEBVIEW V8)
+	// SDK UTAMA ONESIGNAL
 	implementation 'com.onesignal:OneSignal:[4.0.0, 4.99.99]'
 
 	// Plugins Tambahan
