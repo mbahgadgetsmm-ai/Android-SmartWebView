@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET BATCH PERMISSION ENGINE (FIXED FINAL)
+  Smart WebView v8 - MBAH GADGET 4-BATCH PERMISSION ENGINE (ALL IN INITIAL)
 */
 
 import android.Manifest;
@@ -29,24 +29,29 @@ public class PermissionManager {
     }
 
     /**
-     * Memaksa penembakan batch permission sekaligus di detik pertama pasca instal
-     * Mencakup: Lokasi, Notifikasi, serta Media Foto & Video (Tanpa Kamera)
+     * MENEMBAK 4 IZIN SEKALIGUS DI AWAL PASCA INSTALASI!
+     * Mencakup: Lokasi, Notifikasi, KAMERA, serta Media Foto & Video.
      */
     public void requestInitialPermissions() {
         List<String> permissionsToRequest = new ArrayList<>();
 
-        // 1. Validasi Izin Lokasi
+        // 1. Masukkan Izin Lokasi
         if (!isLocationPermissionGranted()) {
             permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION);
             permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         }
 
-        // 2. Validasi Izin Notifikasi (Android 13+)
+        // 2. Masukkan Izin Notifikasi (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isNotificationPermissionGranted()) {
             permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
         }
 
-        // 3. Validasi Izin Media Galeri Foto & Video
+        // 3. Masukkan Izin Kamera (Biar langsung sah di awal!)
+        if (!isCameraPermissionGranted()) {
+            permissionsToRequest.add(Manifest.permission.CAMERA);
+        }
+
+        // 4. Masukkan Izin Media Galeri Foto & Video
         if (!isStoragePermissionGranted()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 permissionsToRequest.add(Manifest.permission.READ_MEDIA_IMAGES);
@@ -56,12 +61,12 @@ public class PermissionManager {
             }
         }
 
-        // Tembak popup beruntun jika ada yang belum diizinkan
+        // Eksekusi: Hantam semua popup beruntun di detik pertama aplikasi dibuka
         if (!permissionsToRequest.isEmpty()) {
-            Log.d(TAG, "Mbah Gadget memicu batch request di awal: " + permissionsToRequest);
+            Log.d(TAG, "Mbah Gadget memicu ALL BATCH request di awal: " + permissionsToRequest);
             ActivityCompat.requestPermissions(activity, permissionsToRequest.toArray(new String[0]), INITIAL_REQUEST_CODE);
         } else {
-            Log.d(TAG, "Seluruh izin awal sudah aman.");
+            Log.d(TAG, "Semua 4 izin utama sudah aman dan disetujui.");
         }
     }
 
@@ -69,14 +74,6 @@ public class PermissionManager {
         if (!isCameraPermissionGranted()) {
             List<String> permissions = new ArrayList<>();
             permissions.add(Manifest.permission.CAMERA);
-            if (!isStoragePermissionGranted()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    permissions.add(Manifest.permission.READ_MEDIA_IMAGES);
-                    permissions.add(Manifest.permission.READ_MEDIA_VIDEO);
-                } else {
-                    permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-                }
-            }
             ActivityCompat.requestPermissions(activity, permissions.toArray(new String[0]), CAMERA_REQUEST_CODE);
         }
     }
