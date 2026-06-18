@@ -1,20 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8
-  https://github.com/mgks/Android-SmartWebView
-
-  A modern, open-source WebView wrapper for building advanced hybrid Android apps.
-  Native features, modular plugins, and full customisation—built for developers.
-
-  - Documentation: https://mgks.github.io/Android-SmartWebView/documentation  
-  - Plugins: https://mgks.github.io/Android-SmartWebView/documentation/plugins  
-  - Discussions: https://github.com/mgks/Android-SmartWebView/discussions  
-  - Sponsor the Project: https://github.com/sponsors/mgks  
-
-  MIT License — https://opensource.org/licenses/MIT  
-
-  Mentioning Smart WebView in your project helps others find it and keeps the dev loop alive.
+  Smart WebView v8 - MBAH GADGET ONE SIGNAL FIXED BUILD
 */
 
 import android.Manifest;
@@ -95,6 +82,9 @@ import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanIntentResult;
 import com.journeyapps.barcodescanner.ScanOptions;
 
+// IMPORT LIBRARY UTAMA ONESIGNAL
+import com.onesignal.OneSignal;
+
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Objects;
@@ -102,10 +92,6 @@ import java.util.regex.Matcher;
 
 import mgks.os.swv.plugins.QRScannerPlugin;
 
-/**
- * Main Activity for Smart WebView
- * Handles WebView configuration, lifecycle events and user interactions
- */
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = "MainActivity";
 
@@ -316,7 +302,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         adContainer = findViewById(R.id.msw_ad_container);
         SWVContext.print_view = findViewById(R.id.print_view);
         
-        // BOOSTER ANTI-KEDIP: Sembunyikan WebView di awal agar latar putih bawaan sistem tidak kelihatan
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.setVisibility(View.INVISIBLE);
         }
@@ -344,18 +329,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setJavaScriptEnabled(true);
         webSettings.setSaveFormData(SWVContext.ASWP_SFORM);
 
-        // KUNCI AUTO-RESPONSIVE + CUBIT ZOOM SINKRON CONFIG PROPERTIES
         webSettings.setSupportZoom(SWVContext.ASWP_ZOOM);          
         webSettings.setBuiltInZoomControls(SWVContext.ASWP_ZOOM);   
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
-        // ===== BOOSTER ULTRA SPEED: CACHE KUNCI INTERNAL + GPU ACCELERATION =====
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK); 
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH); 
         webSettings.setEnableSmoothTransition(true);                   
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null); 
-        // ========================================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
@@ -371,7 +353,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.setOnLongClickListener(v -> true);
         }
 
-        // Optimalisasi WebView ringan
         SWVContext.asw_view.setHapticFeedbackEnabled(false);
         SWVContext.asw_view.setVerticalScrollBarEnabled(false);
 
@@ -477,6 +458,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             permissionManager.requestInitialPermissions();
         }, 1500);
+
+        // ===================================================================
+        // 🔥 INJEKSI PAKSA: AKTIFKAN TOTAL MESIN ONESIGNAL MBAH GADGET 🔥
+        // ===================================================================
+        try {
+            OneSignal.initWithContext(this);
+            OneSignal.setAppId("e722a15b-0b07-4c82-a934-fcd0735704a2");
+            Log.d(TAG, "OneSignal Berhasil Diaktifkan di Toko MBAH GADGET!");
+        } catch (Exception e) {
+            Log.e(TAG, "Gagal memicu mesin OneSignal", e);
+        }
+        // ===================================================================
 
         setupFirebaseMessaging();
     }
@@ -772,33 +765,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Location permission granted.");
-                        
-                        // KUNCI EXTRA: Cegah kedip refresh saat scanning antivirus selesai
                         if (SWVContext.asw_view != null && !isPageLoaded) {
                             SWVContext.asw_view.post(() -> SWVContext.asw_view.reload());
                         }
-
                     } else {
                         Log.w(TAG, "Location permission denied.");
                     }
                 } else if (permissions[i].equals(Manifest.permission.POST_NOTIFICATIONS)) {
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "Notification permission granted.");
-
                         if (SWVContext.asw_view != null && !isPageLoaded) {
                             SWVContext.asw_view.post(() -> SWVContext.asw_view.reload());
-                        }
-
-                        if(SWVContext.SWV_DEBUGMODE) {
-                            Firebase firebase = new Firebase();
-                            firebase.sendMyNotification(
-                                    "Yay! Firebase is working",
-                                    "This is a test notification in action.",
-                                    "OPEN_URI",
-                                    SWVContext.ASWV_URL,
-                                    null,
-                                    String.valueOf(SWVContext.ASWV_FCM_ID),
-                                    getApplicationContext());
                         }
                     } else {
                         Log.w(TAG, "Notification permission denied.");
@@ -818,26 +795,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
-
             SWVContext.getPluginManager().onPageFinished(url);
 
-            // ===== ANIMASI TRANSISI HALUS (PENGUNCI ANTI-BLANK TOTAL) =====
             final View welcomeScreen = findViewById(R.id.msw_welcome);
             final View webViewLayout = findViewById(R.id.msw_view);
 
             if (webViewLayout != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE && url.startsWith("http")) {
                 webViewLayout.setAlpha(0f);
                 webViewLayout.setVisibility(View.VISIBLE);
-                webViewLayout.animate()
-                        .alpha(1f)
-                        .setDuration(600) 
-                        .setListener(null);
-
-                welcomeScreen.animate()
-                        .alpha(0f)
-                        .setDuration(600)
-                        .withEndAction(() -> welcomeScreen.setVisibility(View.GONE));
-                
+                webViewLayout.animate().alpha(1f).setDuration(600).setListener(null);
+                welcomeScreen.animate().alpha(0f).setDuration(600).withEndAction(() -> welcomeScreen.setVisibility(View.GONE));
                 isPageLoaded = true;
             }
 
@@ -874,11 +841,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
-
             if (SWVContext.getPluginManager().shouldOverrideUrlLoading(view, url)) {
                 return true;
             }
-
             if (url.matches("^(https?|file)://.*$")) {
                 SWVContext.CURR_URL = url;
             }
@@ -889,14 +854,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
                 int errorCode = error.getErrorCode();
-                if (errorCode == ERROR_HOST_LOOKUP ||
-                        errorCode == ERROR_TIMEOUT ||
-                        errorCode == ERROR_CONNECT ||
-                        errorCode == ERROR_UNKNOWN ||
-                        errorCode == ERROR_IO) {
-
+                if (errorCode == ERROR_HOST_LOOKUP || errorCode == ERROR_TIMEOUT || errorCode == ERROR_CONNECT || errorCode == ERROR_UNKNOWN || errorCode == ERROR_IO) {
                     Log.e(TAG, "Network Error Occurred: " + error.getDescription());
-
                     view.post(() -> {
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
                             view.loadUrl(SWVContext.ASWV_OFFLINE_URL);
@@ -917,19 +876,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } else {
                 handler.proceed();
                 if (SWVContext.SWV_DEBUGMODE) {
-                    Toast.makeText(MainActivity.this, "SSL Error: " + error.getPrimaryError(),
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "SSL Error: " + error.getPrimaryError(), Toast.LENGTH_SHORT).show();
                 }
             }
         }
 
         @Override
-        public void onReceivedHttpError(WebView view, WebResourceRequest request,
-                                        WebResourceResponse errorResponse) {
+        public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
             super.onReceivedHttpError(view, request, errorResponse);
             if (SWVContext.SWV_DEBUGMODE) {
-                Log.e(TAG, "HTTP Error loading " + request.getUrl().toString() +
-                        ": " + errorResponse.getStatusCode());
+                Log.e(TAG, "HTTP Error loading " + request.getUrl().toString() + ": " + errorResponse.getStatusCode());
             }
         }
     }
