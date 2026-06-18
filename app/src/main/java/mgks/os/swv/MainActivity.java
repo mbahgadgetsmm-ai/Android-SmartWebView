@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ANTI-BLANK SUPER FAST CACHE BUILD (FINAL FIXED)
+  Smart WebView v8 - MBAH GADGET ANTI-BLANK RESUME FORCE RELOAD BUILD
 */
 
 import android.Manifest;
@@ -95,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = "MainActivity";
 
     private boolean isPageLoaded = false;
+    private boolean isFirstLaunchScanCheck = true; // Pengunci otomatis agar reload hanya jalan sekali pasca install/scan
 
     static Functions fns = new Functions();
     private FileProcessing fileProcessing;
@@ -145,7 +146,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
 
         final SplashScreen splashScreen = androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
-
         final View content = findViewById(android.R.id.content);
 
         permissionManager = new PermissionManager(this);
@@ -230,10 +230,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (savedInstanceState == null) {
             setupFeatures();
             handleIncomingIntents();
-        }
-
-        if(SWVContext.SWV_DEBUGMODE){
-            Log.d(TAG, "URL: "+ SWVContext.CURR_URL+"DEVICE INFO: "+ Arrays.toString(fns.get_info(this)));
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(content, (v, windowInsets) -> {
@@ -333,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
-        // ===== 🚀 TURBO SPEED CACHE INTERNAL + ACCELERATION (FIXED FOR ANDROID MODERN) 🚀 =====
+        // ===== 🚀 TURBO SPEED CACHE & GPU HARDWARE ACCELERATION 🚀 =====
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK); 
         webSettings.setDomStorageEnabled(true);    
         webSettings.setDatabaseEnabled(true);       
@@ -341,7 +337,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH); 
         webSettings.setEnableSmoothTransition(true);                   
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null); 
-        // ======================================================================================
+        // ===============================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
@@ -486,7 +482,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         assert searchView != null;
         searchView.setIconified(true);
-        searchView.setIconifiedByDefault(true);
+        searchView.setIconByDefault(true);
         searchView.clearFocus();
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -684,6 +680,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ActivityManager.TaskDescription taskDesc = new ActivityManager.TaskDescription(
                 getString(R.string.app_name), bm, getColor(R.color.colorPrimary));
         setTaskDescription(taskDesc);
+
+        // 🔥 JURUS JALAN PINTAS: Jika user kembali masuk ke aplikasi pasca-instalasi/scanning, paksa WebView reload halaman utama 🔥
+        if (isFirstLaunchScanCheck && SWVContext.asw_view != null) {
+            isFirstLaunchScanCheck = false; // Matikan pengunci agar fungsi reload ini tidak mengganggu aktivitas browsing selanjutnya
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    Log.w(TAG, "Mbah Gadget mendeteksi Anda kembali masuk ke aplikasi pasca pemindaian. Memaksa pemuatan ulang alamat toko...");
+                    SWVContext.asw_view.clearCache(true);
+                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+                } catch (Exception e) {
+                    Log.e(TAG, "Gagal memicu hard reload on resume", e);
+                }
+            }, 300); // Jeda singkat 300ms agar mesin WebView siap menerima perintah render baru
+        }
     }
 
     @Override
@@ -714,14 +724,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        // PENGHANCUR BLANK: Kosongkan data simpanan state lama agar siklusnya tidak mengunci layar putih pasca pemindaian
-        outState.clear();
+        outState.clear(); 
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-        // Abaikan pemulihan otomatis agar memori pasif yang corrupt tidak memicu layar putih
         Log.d(TAG, "Mbah Gadget State Restored Safely Without Blanks.");
     }
 
@@ -857,7 +865,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
                             view.loadUrl(SWVContext.ASWV_OFFLINE_URL);
                         } else {
-                            view.loadUrl("file:///android_asset/error.html");
+                            view.loadUrl("file:///android_asset/web/offline.html");
                         }
                     });
                 }
