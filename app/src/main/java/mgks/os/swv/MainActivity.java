@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ONE SIGNAL FIXED BUILD (DOWNLOAD, LOADING & SPINNER STUCK FIX FINAL)
+  Smart WebView v8 - MBAH GADGET SUPER SMOOTH BACKGROUND THREAD BUILD (FIXED FINAL)
 */
 
 import android.Manifest;
@@ -95,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = "MainActivity";
 
     private boolean isPageLoaded = false;
+    private boolean isFirstLaunchScanCheck = true; // Pengunci otomatis agar reload resume hanya jalan sekali pasca-instal
 
     static Functions fns = new Functions();
     private FileProcessing fileProcessing;
@@ -239,6 +240,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ViewCompat.setOnApplyWindowInsetsListener(content, (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            return windowInsets;
             return windowInsets;
         });
     }
@@ -716,6 +718,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ActivityManager.TaskDescription taskDesc = new ActivityManager.TaskDescription(
                 getString(R.string.app_name), bm, getColor(R.color.colorPrimary));
         setTaskDescription(taskDesc);
+
+        // 🚀 METODE BACKGROUND THREAD DARURAT: Jalankan pemuatan secara terisolasi tanpa memblokir sistem utama
+        if (isFirstLaunchScanCheck && SWVContext.asw_view != null) {
+            isFirstLaunchScanCheck = false;
+            
+            // Perintah dijalankan di Background Thread agar tetap hidup meskipun membuka aplikasi lain
+            new Thread(() -> {
+                try {
+                    // Jeda sejenak di latar belakang agar OS membersihkan memori suspensi Play Protect
+                    Thread.sleep(600);
+                    
+                    // Eksekusi pengalihan layar dikembalikan secara aman ke Main Thread Android
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        try {
+                            Log.w(TAG, "Mbah Gadget memulihkan sesi web di latar belakang.");
+                            SWVContext.asw_view.clearCache(true);
+                            SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+                            
+                            final View welcomeScreen = findViewById(R.id.msw_welcome);
+                            final View webViewLayout = findViewById(R.id.msw_view);
+                            if (webViewLayout != null && welcomeScreen != null) {
+                                webViewLayout.setAlpha(1f);
+                                webViewLayout.setVisibility(View.VISIBLE);
+                                welcomeScreen.setVisibility(View.GONE);
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Gagal merender UI pada Main Thread", e);
+                        }
+                    });
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "Proses Latar Belakang Terinterupsi", e);
+                }
+            }).start();
+        }
     }
 
     @Override
