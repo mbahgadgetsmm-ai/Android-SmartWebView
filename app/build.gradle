@@ -1,11 +1,9 @@
 /*
-  Smart WebView v8 - MBAH GADGET FINAL BUILD
+  Smart WebView v8 - MBAH GADGET FIXED BUILD
 */
 
 plugins {
 	id 'com.android.application'
-	// MENGAKTIFKAN PLUGIN ONESIGNAL DI SISTEM UTAMA
-	id 'com.onesignal.androidsdk.onesignal-gradle-plugin' version '5.1.2'
 }
 
 def getSwvProperties() {
@@ -76,8 +74,8 @@ dependencies {
 	implementation 'androidx.browser:browser:1.10.0'
 	implementation 'androidx.work:work-runtime:2.11.2'
 
-	// Jantung Utama SDK OneSignal
-	implementation 'com.onesignal:OneSignal:[5.0.0, 5.99.99]'
+	// SDK UTAMA ONESIGNAL (DENGAN VERSI STABIL KODE LAMA AGAR SINKRON DENGAN PABRIKAN SMART WEBVIEW V8)
+	implementation 'com.onesignal:OneSignal:[4.0.0, 4.99.99]'
 
 	// Plugins Tambahan
 	implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
