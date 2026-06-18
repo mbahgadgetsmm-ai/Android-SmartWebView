@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET NO-CACHE FIXED BUILD
+  Smart WebView v8 - MBAH GADGET ULTRA SPEED CACHE & GPU BUILD
 */
 
 import android.Manifest;
@@ -301,9 +301,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         adContainer = findViewById(R.id.msw_ad_container);
         SWVContext.print_view = findViewById(R.id.print_view);
         
-        // MODIFIKASI ANTI-BLANK: Tampilkan WebView langsung tanpa disembunyikan
         if (SWVContext.asw_view != null) {
-            SWVContext.asw_view.setVisibility(View.VISIBLE);
+            SWVContext.asw_view.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -334,22 +333,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
-        // ===== 🚀 SETELAN UTAMA: MATIKAN CACHE INTERNAL TOTAL 🚀 =====
-        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE); 
-        // =============================================================
+        // ===== 🚀 TURBO SPEED CACHE KUNCI INTERNAL + GPU ACCELERATION 🚀 =====
+        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK); 
+        webSettings.setDomStorageEnabled(true);    
+        webSettings.setDatabaseEnabled(true);       
+        webSettings.setAppCacheEnabled(true);
+        webSettings.setAppCachePath(getApplicationContext().getCacheDir().getAbsolutePath());
         
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH); 
         webSettings.setEnableSmoothTransition(true);                   
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null); 
+        // =====================================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
-        webSettings.setDomStorageEnabled(true);
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
         if (SWVContext.ASWP_ACCEPT_THIRD_PARTY_COOKIES) {
             CookieManager.getInstance().setAcceptThirdPartyCookies(SWVContext.asw_view, true);
+            CookieManager.getInstance().setAcceptCookie(true);
         }
 
         if (!SWVContext.ASWP_COPYPASTE) {
