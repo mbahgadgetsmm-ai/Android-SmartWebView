@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ANTI-BLANK RESUME FORCE RELOAD BUILD (FIXED FINAL)
+  Smart WebView v8 - MBAH GADGET ANTI-BLANK & SAFE QRIS DOWNLOAD FALLBACK BUILD (PERFECT FINAL)
 */
 
 import android.Manifest;
@@ -365,28 +365,39 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void setupDownloadListener() {
+        // 🔥 RACIKAN PINTAR FALLBACK DOWNLOAD QRIS ANTI-CRASH STORAGE 🔥
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
-            if (!permissionManager.isStoragePermissionGranted()) {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionManager.STORAGE_REQUEST_CODE);
-                Toast.makeText(this, "Storage permission is required to download files.", Toast.LENGTH_LONG).show();
-            } else {
+            try {
+                // Langkah 1: Coba jalankan mesin download resmi bawaan dengan folder publik
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-
                 request.setMimeType(mimeType);
+
                 String cookies = CookieManager.getInstance().getCookie(url);
                 request.addRequestHeader("cookie", cookies);
                 request.addRequestHeader("User-Agent", userAgent);
                 request.setDescription(getString(R.string.dl_downloading));
-                request.setTitle(URLUtil.guessFileName(url, contentDisposition, mimeType));
+                
+                String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
+                request.setTitle(fileName);
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
                 request.allowScanningByMediaScanner();
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,
-                        URLUtil.guessFileName(url, contentDisposition, mimeType));
 
                 DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-                assert dm != null;
-                dm.enqueue(request);
-                Toast.makeText(this, getString(R.string.dl_downloading2), Toast.LENGTH_LONG).show();
+                if (dm != null) {
+                    dm.enqueue(request);
+                    Toast.makeText(this, "Mengunduh file... Silakan cek folder Download.", Toast.LENGTH_LONG).show();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Gagal via internal, alihkan otomatis khusus link unduhannya ke Chrome...", e);
+                // Langkah 2 (JURUS PENYELAMAT): Jika dicekal sistem permission HP modern, lempar KHUSUS link download gambarnya ke Chrome asli
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception ex) {
+                    Toast.makeText(this, "Gagal mengunduh file.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -478,7 +489,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
             searchView.setQueryHint(getString(R.string.search_hint));
             searchView.setIconified(true);
-            // FIX TYPO: Menggunakan setIconifiedByDefault bawaan Android yang sah
             searchView.setIconifiedByDefault(true);
             searchView.clearFocus();
 
