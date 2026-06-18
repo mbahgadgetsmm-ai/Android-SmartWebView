@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ANTI-BLANK RESUME FORCE RELOAD BUILD (FIXED FINAL)
+  Smart WebView v8 - MBAH GADGET ONE SIGNAL FIXED BUILD (DOWNLOAD FIX FINAL)
 */
 
 import android.Manifest;
@@ -95,7 +95,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = "MainActivity";
 
     private boolean isPageLoaded = false;
-    private boolean isFirstLaunchScanCheck = true; // Pengunci otomatis agar reload hanya jalan sekali pasca install/scan
 
     static Functions fns = new Functions();
     private FileProcessing fileProcessing;
@@ -146,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
 
         final SplashScreen splashScreen = androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
+
         final View content = findViewById(android.R.id.content);
 
         permissionManager = new PermissionManager(this);
@@ -232,6 +232,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             handleIncomingIntents();
         }
 
+        if(SWVContext.SWV_DEBUGMODE){
+            Log.d(TAG, "URL: "+ SWVContext.CURR_URL+"DEVICE INFO: "+ Arrays.toString(fns.get_info(this)));
+        }
+
         ViewCompat.setOnApplyWindowInsetsListener(content, (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
@@ -298,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SWVContext.print_view = findViewById(R.id.print_view);
         
         if (SWVContext.asw_view != null) {
-            SWVContext.asw_view.setVisibility(View.VISIBLE);
+            SWVContext.asw_view.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -329,24 +333,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
-        // ===== 🚀 TURBO SPEED CACHE & GPU HARDWARE ACCELERATION 🚀 =====
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK); 
-        webSettings.setDomStorageEnabled(true);    
-        webSettings.setDatabaseEnabled(true);       
-        
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH); 
         webSettings.setEnableSmoothTransition(true);                   
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null); 
-        // ===============================================================
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
+        webSettings.setDomStorageEnabled(true);
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
         if (SWVContext.ASWP_ACCEPT_THIRD_PARTY_COOKIES) {
             CookieManager.getInstance().setAcceptThirdPartyCookies(SWVContext.asw_view, true);
-            CookieManager.getInstance().setAcceptCookie(true);
         }
 
         if (!SWVContext.ASWP_COPYPASTE) {
@@ -364,98 +363,54 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupDownloadListener();
     }
 
-    /**
-     * Metode untuk menentukan nama file yang tepat berdasarkan URL dan konten
-     * Khusus untuk QRIS dan gambar yang tidak memiliki ekstensi yang benar
-     */
-    private String getProperFileName(String url, String contentDisposition, String mimeType) {
-        // Pertama coba dapatkan nama dari URL
-        String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
-        
-        // Jika nama file berakhir dengan .bin atau tidak memiliki ekstensi yang jelas
-        if (fileName.endsWith(".bin") || !fileName.contains(".")) {
-            // Deteksi QRIS dari URL
-            String urlLower = url.toLowerCase();
-            boolean isQRIS = urlLower.contains("qris") || 
-                            urlLower.contains("qr") || 
-                            urlLower.contains("barcode") ||
-                            urlLower.contains("payment") ||
-                            urlLower.contains("pembayaran");
-            
-            // Deteksi dari mimeType
-            boolean isImage = mimeType != null && mimeType.startsWith("image/");
-            
-            // Jika QRIS atau gambar, beri ekstensi .png
-            if (isQRIS || isImage) {
-                // Ambil nama dasar tanpa ekstensi
-                String baseName = fileName;
-                int dotIndex = fileName.lastIndexOf('.');
-                if (dotIndex > 0) {
-                    baseName = fileName.substring(0, dotIndex);
-                }
-                
-                // Tambahkan timestamp agar unik
-                String timestamp = String.valueOf(System.currentTimeMillis());
-                fileName = "QRIS_" + timestamp + ".png";
-                
-                Log.d(TAG, "QRIS detected, renaming to: " + fileName);
-            }
-            
-            // Jika masih .bin dan mengandung kata kunci gambar
-            if (fileName.endsWith(".bin")) {
-                String baseName = fileName.replace(".bin", "");
-                // Coba deteksi dari URL apakah itu gambar
-                if (urlLower.contains(".jpg") || urlLower.contains(".jpeg") || 
-                    urlLower.contains(".png") || urlLower.contains(".gif") ||
-                    urlLower.contains("image")) {
-                    fileName = baseName + ".png";
-                    Log.d(TAG, "Image detected from URL, renaming to: " + fileName);
-                }
-            }
-        }
-        
-        return fileName;
-    }
-
     private void setupDownloadListener() {
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
-            if (!permissionManager.isStoragePermissionGranted()) {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionManager.STORAGE_REQUEST_CODE);
-                Toast.makeText(this, "Storage permission is required to download files.", Toast.LENGTH_LONG).show();
-            } else {
-                // Dapatkan nama file yang benar
-                String fileName = getProperFileName(url, contentDisposition, mimeType);
-                
-                // Set mimeType jika diperlukan
-                String finalMimeType = mimeType;
-                if (fileName.endsWith(".png") && (mimeType == null || mimeType.isEmpty() || mimeType.equals("application/octet-stream"))) {
-                    finalMimeType = "image/png";
-                    Log.d(TAG, "Setting mimeType to image/png for QRIS");
-                }
-                
+            try {
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-
-                // Gunakan mimeType yang sudah diperbaiki
-                request.setMimeType(finalMimeType != null ? finalMimeType : "application/octet-stream");
                 
-                String cookies = CookieManager.getInstance().getCookie(url);
-                if (cookies != null) {
-                    request.addRequestHeader("cookie", cookies);
+                // 1. Logika Perbaikan Tipe Konten Gambar/Video (Penangkal Format .bin)
+                String finalMimeType = mimeType;
+                if (finalMimeType == null || finalMimeType.equalsIgnoreCase("application/octet-stream")) {
+                    if (url.contains(".png") || contentDisposition.contains(".png")) {
+                        finalMimeType = "image/png";
+                    } else if (url.contains(".jpg") || url.contains(".jpeg") || contentDisposition.contains(".jpg")) {
+                        finalMimeType = "image/jpeg";
+                    } else if (url.contains(".mp4") || contentDisposition.contains(".mp4")) {
+                        finalMimeType = "video/mp4";
+                    } else {
+                        finalMimeType = "image/png"; // Otomatis paksa ke PNG untuk keperluan QRIS deposit
+                    }
                 }
+                request.setMimeType(finalMimeType);
+
+                // 2. Koreksi Nama dan Ekstensi File Eksternal
+                String fileName = URLUtil.guessFileName(url, contentDisposition, finalMimeType);
+                if (!fileName.contains(".")) {
+                    if (finalMimeType.contains("video/")) {
+                        fileName += ".mp4";
+                    } else {
+                        fileName += ".png";
+                    }
+                }
+
+                String cookies = CookieManager.getInstance().getCookie(url);
+                request.addRequestHeader("cookie", cookies);
                 request.addRequestHeader("User-Agent", userAgent);
                 request.setDescription(getString(R.string.dl_downloading));
                 request.setTitle(fileName);
+                
+                // 3. Simpan ke Folder Download Publik (Menghilangkan Masalah Peringatan Izin Penyimpanan Kaku)
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
                 request.allowScanningByMediaScanner();
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
                 DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                 if (dm != null) {
                     dm.enqueue(request);
-                    Toast.makeText(this, "Downloading: " + fileName, Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(this, "Download failed", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, getString(R.string.dl_downloading2) + " " + fileName, Toast.LENGTH_LONG).show();
                 }
+            } catch (Exception e) {
+                Log.e(TAG, "Gagal memproses download", e);
             }
         });
     }
@@ -545,24 +500,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final SearchView searchView = (SearchView) menu.findItem(R.id.menu_search).getActionView();
         if (searchView != null) {
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-            searchView.setQueryHint(getString(R.string.search_hint));
-            searchView.setIconified(true);
-            searchView.setIconifiedByDefault(true);
-            searchView.clearFocus();
-
-            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                public boolean onQueryTextSubmit(String query) {
-                    searchView.clearFocus();
-                    fns.aswm_view(SWVContext.ASWV_SEARCH + query, false, SWVContext.asw_error_counter, MainActivity.this);
-                    searchView.setQuery(query, false);
-                    return false;
-                }
-
-                public boolean onQueryTextChange(String query) {
-                    return false;
-                }
-            });
         }
+        if (searchView != null) {
+            searchView.setQueryHint(getString(R.string.search_hint));
+        }
+        assert searchView != null;
+        searchView.setIconified(true);
+        searchView.setIconifiedByDefault(true);
+        searchView.clearFocus();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            public boolean onQueryTextSubmit(String query) {
+                searchView.clearFocus();
+                fns.aswm_view(SWVContext.ASWV_SEARCH + query, false, SWVContext.asw_error_counter, MainActivity.this);
+                searchView.setQuery(query, false);
+                return false;
+            }
+
+            public boolean onQueryTextChange(String query) {
+                return false;
+            }
+        });
         return true;
     }
 
@@ -631,15 +589,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
 
         if (SWVContext.ASWP_PULLFRESH) {
-            pullRefresh.setOnRefreshListener(() -> fns.pull_fresh(MainActivity.this));
+            pullRefresh.setOnRefreshListener(() -> {
+                fns.pull_fresh(MainActivity.this);
+                pullRefresh.setRefreshing(false);
+            });
 
             SWVContext.asw_view.getViewTreeObserver().addOnScrollChangedListener(
                     () -> pullRefresh.setEnabled(SWVContext.asw_view.getScrollY() == 0));
         } else {
-            if (pullRefresh != null) {
-                pullRefresh.setRefreshing(false);
-                pullRefresh.setEnabled(false);
-            }
+            pullRefresh.setRefreshing(false);
+            pullRefresh.setEnabled(false);
         }
     }
 
@@ -746,20 +705,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ActivityManager.TaskDescription taskDesc = new ActivityManager.TaskDescription(
                 getString(R.string.app_name), bm, getColor(R.color.colorPrimary));
         setTaskDescription(taskDesc);
-
-        // 🔥 JURUS JALAN PINTAS ANTI-BLANK: Jika kembali dari suspensi scanning antivirus, paksa WebView reload halaman utama segar 🔥
-        if (isFirstLaunchScanCheck && SWVContext.asw_view != null) {
-            isFirstLaunchScanCheck = false; // Matikan pengunci otomatis agar tidak mengganggu aktivitas browsing selanjutnya
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                try {
-                    Log.w(TAG, "Mbah Gadget mendeteksi Anda kembali masuk ke aplikasi pasca pemindaian. Memaksa pemuatan ulang alamat toko...");
-                    SWVContext.asw_view.clearCache(true);
-                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
-                } catch (Exception e) {
-                    Log.e(TAG, "Gagal memicu hard reload on resume", e);
-                }
-            }, 300); // Jeda singkat memberikan waktu mesin WebView siap memproses rendering grafis
-        }
     }
 
     @Override
@@ -790,13 +735,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.clear(); 
         super.onSaveInstanceState(outState);
+        SWVContext.asw_view.saveState(outState);
+        if (SWVContext.asw_view.getUrl() != null) {
+            outState.putString("swv_last_url", SWVContext.asw_view.getUrl());
+        }
     }
 
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-        Log.d(TAG, "Mbah Gadget State Restored Safely Without Blanks.");
+        super.onRestoreInstanceState(savedInstanceState);
+        SWVContext.asw_view.restoreState(savedInstanceState);
     }
 
     @Override
@@ -931,7 +880,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
                             view.loadUrl(SWVContext.ASWV_OFFLINE_URL);
                         } else {
-                            view.loadUrl("file:///android_asset/web/offline.html");
+                            view.loadUrl("file:///android_asset/error.html");
                         }
                     });
                 }
