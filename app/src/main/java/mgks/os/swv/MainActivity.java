@@ -364,29 +364,98 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupDownloadListener();
     }
 
+    /**
+     * Metode untuk menentukan nama file yang tepat berdasarkan URL dan konten
+     * Khusus untuk QRIS dan gambar yang tidak memiliki ekstensi yang benar
+     */
+    private String getProperFileName(String url, String contentDisposition, String mimeType) {
+        // Pertama coba dapatkan nama dari URL
+        String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
+        
+        // Jika nama file berakhir dengan .bin atau tidak memiliki ekstensi yang jelas
+        if (fileName.endsWith(".bin") || !fileName.contains(".")) {
+            // Deteksi QRIS dari URL
+            String urlLower = url.toLowerCase();
+            boolean isQRIS = urlLower.contains("qris") || 
+                            urlLower.contains("qr") || 
+                            urlLower.contains("barcode") ||
+                            urlLower.contains("payment") ||
+                            urlLower.contains("pembayaran");
+            
+            // Deteksi dari mimeType
+            boolean isImage = mimeType != null && mimeType.startsWith("image/");
+            
+            // Jika QRIS atau gambar, beri ekstensi .png
+            if (isQRIS || isImage) {
+                // Ambil nama dasar tanpa ekstensi
+                String baseName = fileName;
+                int dotIndex = fileName.lastIndexOf('.');
+                if (dotIndex > 0) {
+                    baseName = fileName.substring(0, dotIndex);
+                }
+                
+                // Tambahkan timestamp agar unik
+                String timestamp = String.valueOf(System.currentTimeMillis());
+                fileName = "QRIS_" + timestamp + ".png";
+                
+                Log.d(TAG, "QRIS detected, renaming to: " + fileName);
+            }
+            
+            // Jika masih .bin dan mengandung kata kunci gambar
+            if (fileName.endsWith(".bin")) {
+                String baseName = fileName.replace(".bin", "");
+                // Coba deteksi dari URL apakah itu gambar
+                if (urlLower.contains(".jpg") || urlLower.contains(".jpeg") || 
+                    urlLower.contains(".png") || urlLower.contains(".gif") ||
+                    urlLower.contains("image")) {
+                    fileName = baseName + ".png";
+                    Log.d(TAG, "Image detected from URL, renaming to: " + fileName);
+                }
+            }
+        }
+        
+        return fileName;
+    }
+
     private void setupDownloadListener() {
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
             if (!permissionManager.isStoragePermissionGranted()) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, PermissionManager.STORAGE_REQUEST_CODE);
                 Toast.makeText(this, "Storage permission is required to download files.", Toast.LENGTH_LONG).show();
             } else {
+                // Dapatkan nama file yang benar
+                String fileName = getProperFileName(url, contentDisposition, mimeType);
+                
+                // Set mimeType jika diperlukan
+                String finalMimeType = mimeType;
+                if (fileName.endsWith(".png") && (mimeType == null || mimeType.isEmpty() || mimeType.equals("application/octet-stream"))) {
+                    finalMimeType = "image/png";
+                    Log.d(TAG, "Setting mimeType to image/png for QRIS");
+                }
+                
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
 
-                request.setMimeType(mimeType);
+                // Gunakan mimeType yang sudah diperbaiki
+                request.setMimeType(finalMimeType != null ? finalMimeType : "application/octet-stream");
+                
                 String cookies = CookieManager.getInstance().getCookie(url);
-                request.addRequestHeader("cookie", cookies);
+                if (cookies != null) {
+                    request.addRequestHeader("cookie", cookies);
+                }
                 request.addRequestHeader("User-Agent", userAgent);
                 request.setDescription(getString(R.string.dl_downloading));
-                request.setTitle(URLUtil.guessFileName(url, contentDisposition, mimeType));
+                request.setTitle(fileName);
                 request.allowScanningByMediaScanner();
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,
-                        URLUtil.guessFileName(url, contentDisposition, mimeType));
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
                 DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-                assert dm != null;
-                dm.enqueue(request);
-                Toast.makeText(this, getString(R.string.dl_downloading2), Toast.LENGTH_LONG).show();
+                if (dm != null) {
+                    dm.enqueue(request);
+                    Toast.makeText(this, "Downloading: " + fileName, Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this, "Download failed", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
@@ -478,7 +547,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
             searchView.setQueryHint(getString(R.string.search_hint));
             searchView.setIconified(true);
-            // FIX TYPO: Menggunakan setIconifiedByDefault bawaan Android yang sah
             searchView.setIconifiedByDefault(true);
             searchView.clearFocus();
 
