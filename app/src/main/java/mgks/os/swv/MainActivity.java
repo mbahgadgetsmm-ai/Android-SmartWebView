@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ONE SIGNAL FIXED BUILD
+  Smart WebView v8 - MBAH GADGET NO-CACHE FIXED BUILD
 */
 
 import android.Manifest;
@@ -82,7 +82,6 @@ import com.journeyapps.barcodescanner.ScanContract;
 import com.journeyapps.barcodescanner.ScanIntentResult;
 import com.journeyapps.barcodescanner.ScanOptions;
 
-// IMPORT LIBRARY UTAMA ONESIGNAL
 import com.onesignal.OneSignal;
 
 import java.io.InputStream;
@@ -302,8 +301,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         adContainer = findViewById(R.id.msw_ad_container);
         SWVContext.print_view = findViewById(R.id.print_view);
         
+        // MODIFIKASI ANTI-BLANK: Tampilkan WebView langsung tanpa disembunyikan
         if (SWVContext.asw_view != null) {
-            SWVContext.asw_view.setVisibility(View.INVISIBLE);
+            SWVContext.asw_view.setVisibility(View.VISIBLE);
         }
     }
 
@@ -334,7 +334,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
-        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK); 
+        // ===== 🚀 SETELAN UTAMA: MATIKAN CACHE INTERNAL TOTAL 🚀 =====
+        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE); 
+        // =============================================================
+        
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH); 
         webSettings.setEnableSmoothTransition(true);                   
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null); 
@@ -459,9 +462,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             permissionManager.requestInitialPermissions();
         }, 1500);
 
-        // ===================================================================
-        // 🔥 INJEKSI PAKSA: AKTIFKAN TOTAL MESIN ONESIGNAL MBAH GADGET 🔥
-        // ===================================================================
         try {
             OneSignal.initWithContext(this);
             OneSignal.setAppId("e722a15b-0b07-4c82-a934-fcd0735704a2");
@@ -469,7 +469,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } catch (Exception e) {
             Log.e(TAG, "Gagal memicu mesin OneSignal", e);
         }
-        // ===================================================================
 
         setupFirebaseMessaging();
     }
