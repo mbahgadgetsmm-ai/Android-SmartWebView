@@ -1,7 +1,7 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET ULTRA SPEED CACHE & GPU BUILD (FIXED FINAL 8.0.7)
+  Smart WebView v8 - MBAH GADGET ANTI-BLANK SUPER FAST CACHE BUILD (FINAL FIXED)
 */
 
 import android.Manifest;
@@ -302,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SWVContext.print_view = findViewById(R.id.print_view);
         
         if (SWVContext.asw_view != null) {
-            SWVContext.asw_view.setVisibility(View.INVISIBLE);
+            SWVContext.asw_view.setVisibility(View.VISIBLE);
         }
     }
 
@@ -526,7 +526,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     startActivity(Intent.createChooser(intent, "Send Email"));
                 } catch (android.content.ActivityNotFoundException ex) {
-                    // FIX TYPO: Mengubah Toast.SHORT menjadi Toast.LENGTH_SHORT yang benar
                     Toast.makeText(this, "No email app found.", Toast.LENGTH_SHORT).show();
                 }
             } else {
@@ -715,18 +714,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.clear(); 
+        // PENGHANCUR BLANK: Kosongkan data simpanan state lama agar siklusnya tidak mengunci layar putih pasca pemindaian
+        outState.clear();
         super.onSaveInstanceState(outState);
-        SWVContext.asw_view.saveState(outState);
-        if (SWVContext.asw_view.getUrl() != null) {
-            outState.putString("swv_last_url", SWVContext.asw_view.getUrl());
-        }
     }
 
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        SWVContext.asw_view.restoreState(savedInstanceState);
+        // Abaikan pemulihan otomatis agar memori pasif yang corrupt tidak memicu layar putih
+        Log.d(TAG, "Mbah Gadget State Restored Safely Without Blanks.");
     }
 
     @Override
