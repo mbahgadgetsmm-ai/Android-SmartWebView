@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "855892747355",
+    "project_id": "mbah-gadget-6eab8",
+    "storage_bucket": "mbah-gadget-6eab8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:855892747355:android:571ccb61879c82a840cb7e",
+        "android_client_info": {
+          "package_name": "com.mbah.gadget"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXa2ft9_8vic-EcbQWYn-VQRkLBslGDNE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
