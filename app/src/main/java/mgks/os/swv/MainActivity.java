@@ -99,8 +99,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onActivityResult(requestCode, resultCode, intent);
         SWVContext.getPluginManager().onActivityResult(requestCode, resultCode, intent);
     }
-
-    @SuppressLint({"SetJavaScriptEnabled", "WrongViewCast", "JavascriptInterface"})
+  @SuppressLint({"SetJavaScriptEnabled", "WrongViewCast", "JavascriptInterface"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if (SWVContext.ASWP_BLOCK_SCREENSHOTS) {
@@ -175,8 +174,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 SWVContext.asw_vcam_message = null;
             }
         );
-
-        qrScannerLauncher = registerForActivityResult(new ScanContract(),
+      qrScannerLauncher = registerForActivityResult(new ScanContract(),
                 result -> {
                     PluginInterface plugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
                     if (plugin instanceof QRScannerPlugin) {
@@ -222,12 +220,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (SWVContext.ASWV_LAYOUT == 1) {
             setContentView(R.layout.drawer_main);
             MaterialToolbar toolbar = findViewById(R.id.toolbar);
-
             if (SWVContext.ASWP_DRAWER_HEADER) {
                 findViewById(R.id.app_bar).setVisibility(View.VISIBLE);
                 setSupportActionBar(toolbar);
                 Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
-
                 DrawerLayout drawer = findViewById(R.id.drawer_layout);
                 ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.open, R.string.close);
                 drawer.addDrawerListener(toggle);
@@ -240,7 +236,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
             setContentView(R.layout.activity_main);
         }
-
         SWVContext.asw_view = findViewById(R.id.msw_view);
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.setVisibility(View.INVISIBLE);
@@ -250,89 +245,66 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void initializeWebView() {
         Playground playground = new Playground(this, SWVContext.asw_view, fns);
         SWVContext.getPluginManager().setPlayground(playground);
-
         WebSettings webSettings = SWVContext.asw_view.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
-        
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-
         webSettings.setSupportZoom(true);          
         webSettings.setBuiltInZoomControls(true);   
         webSettings.setDisplayZoomControls(false); 
-        
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
-
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-
         SWVContext.asw_view.setWebViewClient(new WebViewCallback());
         SWVContext.asw_view.setWebChromeClient(createWebChromeClient());
-        
         setupDownloadListener();
     }
-
-    private void setupDownloadListener() {
+private void setupDownloadListener() {
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
             try {
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-                
                 String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
                 String finalMimeType = mimeType;
-
                 if (finalMimeType == null || finalMimeType.equalsIgnoreCase("application/octet-stream") || fileName.endsWith(".bin")) {
                     if (url.contains("qris") || url.contains("deposit") || url.contains("invoice") || url.contains("gate")) {
                         finalMimeType = "image/png";
                         fileName = "QRIS_Mbah_Gadget_" + System.currentTimeMillis() + ".png";
-                    } 
-                    else if (url.contains(".apk")) {
+                    } else if (url.contains(".apk")) {
                         finalMimeType = "application/vnd.android.package-archive";
                         fileName = URLUtil.guessFileName(url, contentDisposition, finalMimeType);
-                    } 
-                    else {
+                    } else {
                         finalMimeType = "image/png";
-                        if (fileName.endsWith(".bin")) {
-                            fileName = fileName.replace(".bin", ".png");
-                        }
+                        if (fileName.endsWith(".bin")) fileName = fileName.replace(".bin", ".png");
                     }
                 }
-
                 request.setMimeType(finalMimeType);
-                
                 String cookies = CookieManager.getInstance().getCookie(url);
                 request.addRequestHeader("cookie", cookies);
                 request.addRequestHeader("User-Agent", userAgent);
                 request.setDescription("Mendownload berkas...");
                 request.setTitle(fileName);
-                
                 request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
                 request.allowScanningByMediaScanner();
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-
                 DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                 if (dm != null) {
                     dm.enqueue(request);
                     Toast.makeText(this, "Mendownload: " + fileName, Toast.LENGTH_LONG).show();
                 }
-            } catch (Exception e) {
-                Log.e(TAG, "Download Error", e);
-            }
+            } catch (Exception e) { Log.e(TAG, "Download Error", e); }
         });
     }
 
     private WebChromeClient createWebChromeClient() {
         return new WebChromeClient() {
             @Override
-            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
-                return fileProcessing.onShowFileChooser(webView, filePathCallback, fileChooserParams);
-            }
-
+            public boolean onShowFileChooser(WebView w, ValueCallback<Uri[]> f, FileChooserParams p) { return fileProcessing.onShowFileChooser(w, f, p); }
             @Override
             public void onProgressChanged(WebView view, int p) {
                 if (p > 40) {
@@ -343,14 +315,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }
             }
-
             @Override
             public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
-                if (permissionManager.isLocationPermissionGranted()) {
-                    callback.invoke(origin, true, false);
-                } else {
-                    permissionManager.requestInitialPermissions();
-                }
+                if (permissionManager.isLocationPermissionGranted()) callback.invoke(origin, true, false);
+                else permissionManager.requestInitialPermissions();
             }
         };
     }
@@ -358,21 +326,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void setupFeatures() {
         setupSwipeRefresh();
         permissionManager.requestInitialPermissions();
-
-        try {
-            OneSignal.initWithContext(this);
-            OneSignal.setAppId("e722a15b-0b07-4c82-a934-fcd0735704a2");
-        } catch (Exception e) {
-            Log.e(TAG, "OneSignal Init Error", e);
-        }
+        try { OneSignal.initWithContext(this); OneSignal.setAppId("e722a15b-0b07-4c82-a934-fcd0735704a2"); } catch (Exception e) { Log.e(TAG, "OneSignal Init Error", e); }
     }
 
     private void setupSwipeRefresh() {
         final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
-        if (pullRefresh != null) {
-            pullRefresh.setRefreshing(false);
-            pullRefresh.setEnabled(false);
-        }
+        if (pullRefresh != null) { pullRefresh.setRefreshing(false); pullRefresh.setEnabled(false); }
     }
 
     @Override
@@ -394,9 +353,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
             } else {
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
-                if (welcomeScreen != null) {
-                    welcomeScreen.setVisibility(View.GONE);
-                }
+                if (welcomeScreen != null) welcomeScreen.setVisibility(View.GONE);
                 SWVContext.asw_view.setVisibility(View.VISIBLE);
             }
         }
@@ -405,127 +362,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onPause() {
         super.onPause();
-        if (SWVContext.asw_view != null) {
-            SWVContext.asw_view.onPause();
-        }
+        if (SWVContext.asw_view != null) SWVContext.asw_view.onPause();
     }
 
     private class WebViewCallback extends WebViewClient {
-        // 🔒 PINTU 1: Mencegat saat pemuatan halaman dimulai dari luar browser WebView
         @Override
-        public void onPageStarted(WebView view, String url, Bitmap favicon) {
-            super.onPageStarted(view, url, favicon);
-            
-            if (url != null) {
-                String originalUrl = view.getOriginalUrl();
-                
-                if (url.contains("/deposit/history") || url.contains("/history")) {
-                    if (originalUrl != null && (originalUrl.contains("payment.paydisini.co.id") 
-                                             || originalUrl.contains("web.paydisini.co.id") 
-                                             || originalUrl.contains("tripay.co.id") 
-                                             || originalUrl.contains("/checkout/"))) {
-                        executeCleanHistoryRedirect(url);
-                        return;
-                    }
-                }
-                
-                if (url.contains("/cronjob/paydisini") || url.contains("/cronjob/tripay")) {
-                    executeCleanHistoryRedirect(url);
-                }
-            }
-        }
-
+        public void onPageStarted(WebView view, String url, Bitmap favicon) { super.onPageStarted(view, url, favicon); }
         @Override
         public void onPageFinished(WebView view, String url) {
             final View welcomeScreen = findViewById(R.id.msw_welcome);
-            if (SWVContext.asw_view != null && welcomeScreen != null) {
-                SWVContext.asw_view.setVisibility(View.VISIBLE);
-                welcomeScreen.setVisibility(View.GONE);
-            }
-            
+            if (SWVContext.asw_view != null && welcomeScreen != null) { SWVContext.asw_view.setVisibility(View.VISIBLE); welcomeScreen.setVisibility(View.GONE); }
             view.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
-
-            view.loadUrl("javascript:(function() { " +
-                    "var style = document.createElement('style'); " +
-                    "style.innerHTML = 'img { max-width: 100% !important; height: auto !important; }'; " +
-                    "document.head.appendChild(style); " +
-                    "})()");
-
-            if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) {
-                fns.inject_gtag(view, SWVContext.ASWV_GTAG);
-            }
+            if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
-
-        // 🔒 PINTU 2: Mencegat lompatan link internal (Sistem Klik Ajax, PushState JavaScript otomatis dari web)
         @Override
-        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-            String url = request.getUrl().toString();
-            
-            if (url.contains("mbahgadget.co.id")) {
-                // JIKA LEMPARAN AJAX OTOMATIS BERMUARA KE HALAMAN RIWAYAT DEPOSIT, FORCE REFRESH INSTAN!
-                if (url.contains("/deposit/history") || url.contains("/history") || url.contains("/cronjob/")) {
-                    executeCleanHistoryRedirect(url);
-                    return true;
-                }
-                return false; 
-            }
-            return fns.url_actions(view, url, MainActivity.this);
-        }
-
-        // 🔒 PINTU 3: (Jaring Pengaman Mutlak) Memantau pemuatan sumber daya aset latar belakang
-        @Override
-        public void onLoadResource(WebView view, String url) {
-            super.onLoadResource(view, url);
-            // Jika terdeteksi ada skrip cronjob callback gateway luar yang menyelinap saat loading sedang gantung
-            if (url != null && (url.contains("/cronjob/paydisini") || url.contains("/cronjob/tripay"))) {
-                String currentUrl = view.getUrl();
-                if (currentUrl != null && (currentUrl.contains("/deposit/history") || currentUrl.contains("/history"))) {
-                    executeCleanHistoryRedirect(currentUrl);
-                }
-            }
-        }
-
+        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) { return fns.url_actions(view, request.getUrl().toString(), MainActivity.this); }
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
-                int errorCode = error.getErrorCode();
-                if (errorCode == ERROR_HOST_LOOKUP || errorCode == ERROR_TIMEOUT || errorCode == ERROR_CONNECT || errorCode == ERROR_UNKNOWN || errorCode == ERROR_IO) {
-                    Log.e(TAG, "Network Error Occurred: " + error.getDescription());
-                    view.post(() -> {
-                        if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
-                            view.loadUrl(SWVContext.ASWV_OFFLINE_URL); 
-                        } else {
-                            view.loadUrl("file:///android_asset/error.html"); 
-                        }
-                    });
-                }
+                view.post(() -> {
+                    if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) view.loadUrl(SWVContext.ASWV_OFFLINE_URL);
+                    else view.loadUrl("file:///android_asset/error.html");
+                });
             }
             super.onReceivedError(view, request, error);
         }
     }
 
-    private void handleIncomingIntents() {
-        fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
-    }
-
-    // ⚡ DINAMIS FLUSH: Eksekusi penghancur cache penahan history visual tanpa merusak parameter string invoice
-    private void executeCleanHistoryRedirect(String targetUrl) {
-        if (SWVContext.asw_view != null && targetUrl != null) {
-            SWVContext.asw_view.stopLoading(); 
-            SWVContext.asw_view.clearHistory(); 
-            SWVContext.asw_view.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
-            SWVContext.asw_view.loadUrl(targetUrl); 
-        }
-    }
+    private void handleIncomingIntents() { fns.aswm_view(SWVContext.ASWV_URL, false, 0, this); }
 
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (SWVContext.asw_view != null && SWVContext.asw_view.canGoBack()) {
-                SWVContext.asw_view.goBack();
-            } else {
-                moveTaskToBack(true);
-            }
+            if (SWVContext.asw_view != null && SWVContext.asw_view.canGoBack()) { SWVContext.asw_view.goBack(); }
+            else { moveTaskToBack(true); }
             return true;
         }
         return super.onKeyDown(keyCode, event);
