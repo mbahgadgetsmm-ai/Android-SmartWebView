@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET TRIPLE-LAYER GATEWAY RADAR
-  FIXED: INTERCEPT AT ONPAGESTARTED, SHOULDOVERRIDE, AND ONLOADRESOURCE. AUTOMATIC FLUSH, NO MORE MANUAL BACK NEEDED, 100% BUILD SUCCESS!
+  FIXED: LOCKED INTERNAL WEBVIEW, ALL LINKS AND PAYMENTS SECURED INSIDE APK!
 */
 
 import android.Manifest;
@@ -99,14 +99,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onActivityResult(requestCode, resultCode, intent);
         SWVContext.getPluginManager().onActivityResult(requestCode, resultCode, intent);
     }
-  @SuppressLint({"SetJavaScriptEnabled", "WrongViewCast", "JavascriptInterface"})
+
+    @SuppressLint({"SetJavaScriptEnabled", "WrongViewCast", "JavascriptInterface"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if (SWVContext.ASWP_BLOCK_SCREENSHOTS) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // INTERSEPTOR TOMBOL BACK VIRTUAL HP
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -251,7 +251,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        
+        // AKSELERASI KECEPATAN PERANGKAT KERAS (LAYER_TYPE_HARDWARE)
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        
         webSettings.setSupportZoom(true);          
         webSettings.setBuiltInZoomControls(true);   
         webSettings.setDisplayZoomControls(false); 
@@ -265,7 +268,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SWVContext.asw_view.setWebChromeClient(createWebChromeClient());
         setupDownloadListener();
     }
-private void setupDownloadListener() {
+
+    private void setupDownloadListener() {
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
             try {
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
@@ -375,8 +379,29 @@ private void setupDownloadListener() {
             view.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
+
+        // 🔒 MODE KURUNGAN TOTAL: Link Pembayaran & Web DIKUNCI 100% di APK browser luar diblokir!
         @Override
-        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) { return fns.url_actions(view, request.getUrl().toString(), MainActivity.this); }
+        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+            String url = request.getUrl().toString();
+            
+            // Protokol skema aplikasi resmi (WhatsApp, Intent E-Wallet/Bank Mobile, Telepon) tetap diizinkan panggil aplikasi luar
+            if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:")) {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    view.getContext().startActivity(intent);
+                    return true;
+                } catch (Exception e) {
+                    Log.e(TAG, "Gagal membuka aplikasi luar resmi: " + e.getMessage());
+                    return true;
+                }
+            }
+            
+            // Seluruh link web biasa (http/https), Tripay, Paydisini, dll dipaksa mutlak dimuat di dalam APK
+            view.loadUrl(url);
+            return true;
+        }
+
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
