@@ -26,8 +26,11 @@ android {
 		applicationId = swvProps.getProperty('build.application.id', 'com.mbah.gadget')
 		minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
 		targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
-		versionCode = 15
-		versionName = "8.0.8"
+		
+		// --- VERSI SUDAH DINAIKKAN UNTUK INSTANT MODE UPDATE ---
+		versionCode = 16
+		versionName = "8.1.0"
+		
 		multiDexEnabled = true
 	}
 
