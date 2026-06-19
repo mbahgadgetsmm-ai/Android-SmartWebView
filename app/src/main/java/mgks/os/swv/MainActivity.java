@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET HYBRID FACEBOOK-PERSISTENCE MODE
-  FIXED: INSTANT RESUME WITHOUT LOADING, MOVE TO BACKGROUND ON BACK, RESPONSIVE TIKET IMAGE, ANTI-BIN QRIS, ONE SIGNAL, & GA4 ACTIVE!
+  Smart WebView v8 - MBAH GADGET HYBRID FACEBOOK-PERSISTENCE + OFFLINE RECOVERY
+  FIXED: OFFLINE SCREEN WITH RETRY BUTTON, INSTANT RESUME, MOVE TO BACKGROUND ON BACK, RESPONSIVE TIKET IMAGE, ANTI-BIN QRIS, ONE SIGNAL, & GA4!
 */
 
 import android.Manifest;
@@ -107,16 +107,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // 🛠️ FIX LOGIKA TOMBOL BACK AGAR PERSIS FACEBOOK (ANTI-KILL RAM)
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 if (SWVContext.asw_view.canGoBack()) {
-                    SWVContext.asw_view.goBack(); // Jika ada riwayat halaman, mundurkan di dalam web
+                    SWVContext.asw_view.goBack(); 
                 } else {
-                    // JIKA DI HALAMAN UTAMA, JANGAN DI-FINISH!
-                    // Lempar aplikasi ke background RAM agar pas dibuka lagi langsung instan kebuka halaman terakhir!
-                    moveTaskToBack(true); 
+                    moveTaskToBack(true); // Sembunyikan ke RAM latar belakang persis Facebook
                 }
             }
         });
@@ -380,7 +377,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    // ⚡ SUPER TURBO KUNCI RESUME: Ketika kembali dibuka, ambil instan isi halaman terakhir dari RAM tanpa reload!
     @Override
     public void onResume() {
         super.onResume();
@@ -390,7 +386,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
             } else {
-                // Sesi dipulihkan instan tanpa memicu reload URL dari nol
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
                 if (welcomeScreen != null) {
                     welcomeScreen.setVisibility(View.GONE);
@@ -404,7 +399,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onPause() {
         super.onPause();
         if (SWVContext.asw_view != null) {
-            SWVContext.asw_view.onPause(); // Menjaga status halaman web tetap membeku di RAM background
+            SWVContext.asw_view.onPause();
         }
     }
 
@@ -432,20 +427,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             return fns.url_actions(view, request.getUrl().toString(), MainActivity.this);
         }
+
+        // 🛠️ MERESTORE KEMBALI FITUR DETEKSI OFFLINE BAWAAN ASLI (KUNCI RECOVERY)
+        @Override
+        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+            if (request.isForMainFrame()) {
+                int errorCode = error.getErrorCode();
+                if (errorCode == ERROR_HOST_LOOKUP || errorCode == ERROR_TIMEOUT || errorCode == ERROR_CONNECT || errorCode == ERROR_UNKNOWN || errorCode == ERROR_IO) {
+                    Log.e(TAG, "Network Error Occurred: " + error.getDescription());
+                    view.post(() -> {
+                        if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
+                            view.loadUrl(SWVContext.ASWV_OFFLINE_URL); // Tembak halaman offline custom dari config web
+                        } else {
+                            view.loadUrl("file:///android_asset/error.html"); // Kembalikan ke berkas offline lokal asli
+                        }
+                    });
+                }
+            }
+            super.onReceivedError(view, request, error);
+        }
     }
 
     private void handleIncomingIntents() {
         fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
     }
 
-    // 🛠️ FIX LOGIKA TOMBOL HARDWARE KEYBOARD / TOMBOL BACK BAWAHAN HP
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (SWVContext.asw_view.canGoBack()) {
                 SWVContext.asw_view.goBack();
             } else {
-                moveTaskToBack(true); // Lempar ke background RAM persis Facebook
+                moveTaskToBack(true); 
             }
             return true;
         }
