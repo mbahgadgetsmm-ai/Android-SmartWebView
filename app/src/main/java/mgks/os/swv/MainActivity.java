@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET GLOBAL ANTI-STUCK SYSTEM (FORCE DISMISS LOADING)
-  FIXED: 1X GLOBAL DIRECT BACK TO HOME + JAVASCRIPT MODAL DISMISS (ANTI-LOADING STUCK PIHAK KETIGA, VIEWPORT ORIGINAL TRUE, BUILD SUCCESS)
+  Smart WebView v8 - MBAH GADGET GLOBAL HARD-RELOAD SYSTEM
+  FIXED: 1X GLOBAL BACK + HARD RELOAD WEB ENGINE (TOTAL KILL PLEASE WAIT LOADING, VIEWPORT ORIGINAL TRUE, BUILD SUCCESS)
 */
 
 import android.Manifest;
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // 🛠️ INTERSEPTOR BACK SYSTEM VIRTUAL (1X KLIK + HANCURKAN LAYAR LOADING)
+        // 🛠️ KUNCI SAKTI VIRTUAL BACK: MEMAKSA HARD RELOAD ENGINE WEB UNTUK MEMBUNUH OVERLAY LOADING
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -116,16 +116,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
                     moveTaskToBack(true); 
                 } else {
-                    SWVContext.asw_view.stopLoading(); 
-                    SWVContext.asw_view.clearHistory(); 
-                    
-                    // ⚡ SUNTIKAN JAVASCRIPT 1: Cari elemen dialog modal "Please wait" di web lalu paksa hapus/sembunyikan dari layar sebelum muat ulang
-                    SWVContext.asw_view.loadUrl("javascript:(function(){ " +
-                            "var elements = document.getElementsByClassName('modal'); for(var i=0; i<elements.length; i++) { elements[i].style.display='none'; } " +
-                            "var loaders = document.querySelectorAll('[id*=\"loading\"], [class*=\"loading\"], [id*=\"wait\"], [class*=\"wait\"]'); for(var i=0; i<loaders.length; i++) { loaders[i].remove(); } " +
-                            "})()");
-                    
+                    // Kunci Pemutus Siklus Macet Visual: Lempar ke Beranda lalu hantam dengan reload mesin bersih!
+                    SWVContext.asw_view.stopLoading();
+                    SWVContext.asw_view.clearHistory();
                     SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+                    
+                    // Delay 100ms agar url utama map sempurna, lalu hantam reload() untuk meruntuhkan script loading web yang membeku
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        if (SWVContext.asw_view != null) {
+                            SWVContext.asw_view.reload();
+                        }
+                    }, 100);
                 }
             }
         });
@@ -464,7 +465,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
     }
 
-    // 🛠️ HARDWARE BACK KEY INTERSEPTOR: PUKUL RATA PENGHANCUR ELEMEN LOADING MEMBEKU
+    // 🛠️ KUNCI SAKTI HARDWARE KEY BACK HP: PAKSA REFRESH ENGINE GUNA MERUNTUHKAN OVERLAY AJAX LOADING
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -473,16 +474,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
                 moveTaskToBack(true); 
             } else {
+                // Hentikan penumpukan data lama dari Paydisini
                 SWVContext.asw_view.stopLoading(); 
                 SWVContext.asw_view.clearHistory(); 
-                
-                // ⚡ SUNTIKAN JAVASCRIPT 2: Eksekusi paksa penghapusan elemen loading dari DOM HTML website
-                SWVContext.asw_view.loadUrl("javascript:(function(){ " +
-                        "var elements = document.getElementsByClassName('modal'); for(var i=0; i<elements.length; i++) { elements[i].style.display='none'; } " +
-                        "var loaders = document.querySelectorAll('[id*=\"loading\"], [class*=\"loading\"], [id*=\"wait\"], [class*=\"wait\"]'); for(var i=0; i<loaders.length; i++) { loaders[i].remove(); } " +
-                        "})()");
-                
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
+                
+                // Beri jeda ketukan mesin Android, lalu paksa jalankan .reload() murni
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (SWVContext.asw_view != null) {
+                        SWVContext.asw_view.reload();
+                    }
+                }, 100);
             }
             return true;
         }
