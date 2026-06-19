@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST TURBO RESUME
-  FIXED: SAKTI ANTI-BIN QRIS DOWNLOAD, ONE SIGNAL, GA4, DOWNLOAD, UPLOAD, QRIS & INSTANT RESUME ACTIVE!
+  FIXED: AUTO-RESPONSIVE IMAGE TIKET, DIRECT PINCH ZOOM, ANTI-BIN QRIS, ONE SIGNAL, GA4 & INSTANT RESUME ACTIVE!
 */
 
 import android.Manifest;
@@ -254,9 +254,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
+        // 🛠️ KUNCI 1: MEMBUAT GAMBAR DI TIKET RESPONSIF MENYESUAIKAN LEBAR LAYAR HP HP
+        webSettings.setUseWideViewPort(true);       // Membuka viewport web seluas layar perangkat
+        webSettings.setLoadWithOverviewMode(true);  // Memaksa konten gambar mengecil otomatis pas layar HP
+
+        // 🛠️ KUNCI 2: AKTIFKAN SENSOR MULTI-SENTUH UNTUK MENCUBIT GAMBAR DI TIKET
         webSettings.setSupportZoom(true);
         webSettings.setBuiltInZoomControls(true);
-        webSettings.setDisplayZoomControls(false);
+        webSettings.setDisplayZoomControls(false); // Sembunyikan tombol zoom bawaan Google yang mengganggu layar
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
@@ -269,29 +274,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupDownloadListener();
     }
 
-    // 🛠️ RACIKAN ULANG SAKTI: ENGINE DOWNLOAD ANTI-BIN KHUSUS GAMBAR QRIS DEPOSIT
     private void setupDownloadListener() {
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
             try {
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
                 
-                // 1. Tebak nama file & format aslinya dari data header server
                 String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
                 String finalMimeType = mimeType;
 
-                // 2. Kunci Utama: Jika server mengirim file mentah atau nama file berujung .bin
                 if (finalMimeType == null || finalMimeType.equalsIgnoreCase("application/octet-stream") || fileName.endsWith(".bin")) {
-                    // Cek jika ini pemicu dari tombol invoice/deposit/qris di web, langsung paksa jadi PNG
                     if (url.contains("qris") || url.contains("deposit") || url.contains("invoice") || url.contains("gate")) {
                         finalMimeType = "image/png";
                         fileName = "QRIS_Mbah_Gadget_" + System.currentTimeMillis() + ".png";
                     } 
-                    // Cek jika ini file APK
                     else if (url.contains(".apk")) {
                         finalMimeType = "application/vnd.android.package-archive";
                         fileName = URLUtil.guessFileName(url, contentDisposition, finalMimeType);
                     } 
-                    // Deteksi universal fallback gambar
                     else {
                         finalMimeType = "image/png";
                         if (fileName.endsWith(".bin")) {
@@ -416,6 +415,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 welcomeScreen.setVisibility(View.GONE);
             }
             
+            // 🛠️ KUNCI 3: INJEKSI CSS REINFORCEMENT AGAR GAMBAR TIKET AMAN TIMBAL BALIK (MUTLAK RESPONSIF)
+            view.loadUrl("javascript:(function() { " +
+                    "var style = document.createElement('style'); " +
+                    "style.innerHTML = 'img { max-width: 100% !important; height: auto !important; }'; " +
+                    "document.head.appendChild(style); " +
+                    "})()");
+
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) {
                 fns.inject_gtag(view, SWVContext.ASWV_GTAG);
             }
