@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET GLOBAL DIRECT REDIRECT SYSTEM
-  FIXED: ANTI-FREEZE "PLEASE WAIT" TOTAL, GLOBAL HOME REDIRECT, VIEWPORT TRUE (ORIGINAL SIZE), RESPONSIVE TIKET IMAGE, ANTI-BIN QRIS, ONE SIGNAL & GA4!
+  Smart WebView v8 - MBAH GADGET GLOBAL ANTI-STUCK SYSTEM
+  FIXED: 1X GLOBAL DIRECT BACK TO HOME (ANTI-LOADING BERULANG, ANTI-MACET PIHAK KETIGA, VIEWPORT ORIGINAL TRUE)
 */
 
 import android.Manifest;
@@ -107,19 +107,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // 🛠️ PUKUL RATA GLOBAL (SISTEM DI RE-DIRECT KE HALAMAN UTAMA LANGSUNG)
+        // 🛠️ KUNCI SAKTI 1: INTERSEPTOR BACK SYSTEM VIRTUAL (ANTI-STUCK GLOBAL JALUR BARU)
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 String currentUrl = SWVContext.asw_view.getUrl();
                 
-                // Jika user sedang berada tepat di Beranda Utama / Home SMM Panel antum
+                // Jika posisi pembeli sudah berada pas di Beranda Utama SMM Panel
                 if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
-                    moveTaskToBack(true); // Langsung sembunyikan aplikasi tidur di RAM belakang
+                    moveTaskToBack(true); // Langsung tidurkan aplikasi dengan aman ke RAM belakang (Siklus Facebook)
                 } else {
-                    // JIKA DI HALAMAN MANA PUN SELAIN BERANDA = Potong paksa, langsung hantam balik ke Tampilan Utama!
-                    SWVContext.asw_view.clearCache(false);
-                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+                    // JIKA DI HALAMAN MANA PUN DI LUAR BERANDA (PAYDISINI, INVOICE, DLL) = STOP SEMUA LOADING & DIRECT PULANG INSTAN!
+                    SWVContext.asw_view.stopLoading(); // Patek mati loading halaman luar yang berputar/stuck
+                    SWVContext.asw_view.clearHistory(); // Hapus bersih jejak langkah kaki di situs pihak ketiga
+                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); // Tembak lurus kembali ke Beranda Utama
                 }
             }
         });
@@ -264,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setBuiltInZoomControls(true);   
         webSettings.setDisplayZoomControls(false); 
         
-        // TETAP TRUE: Mempertahankan ukuran asli bawaan yang antum inginkan
+        // KUNCI RESOLUSI: Mengaktifkan pengaturan awal orisinal yang antum inginkan
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
@@ -455,19 +456,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    // 🛠️ INTERSEPTOR TOMBOL TOMBOL FISIK BACK HP (PUKUL RATA REDIRECT GLOBAL)
+    // 🛠️ KUNCI SAKTI 2: INTERSEPTOR HARDWARE BACK BUTTON HP (PUKUL RATA BYPASS GLOBAL)
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             String currentUrl = SWVContext.asw_view.getUrl();
             
-            // Jika posisinya sudah ada di Beranda Dashboard Utama
+            // Jika pembeli memencet back tepat di halaman utama
             if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
-                moveTaskToBack(true); // Lempar ke background RAM (Facebook System)
+                moveTaskToBack(true); // Masukkan aplikasi ke RAM latar belakang
             } else {
-                // DI HALAMAN MANA PUN ITU (TANPA TERKECUALI) = Paksa mental balik ke halaman utama!
-                SWVContext.asw_view.clearCache(false);
-                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+                // JIKA DI LINK LUAR PIHAK KETIGA MANA PUN = Matikan proses loading macet, hapus riwayat, hantam balik ke Beranda Dashboard!
+                SWVContext.asw_view.stopLoading(); // Kunci pemotong loading muter
+                SWVContext.asw_view.clearHistory(); // Kunci penghapus riwayat eksternal
+                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); // Eksekusi langsung ke halaman utama
             }
             return true;
         }
