@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET GLOBAL ANTI-STUCK SYSTEM
-  FIXED: 1X GLOBAL DIRECT BACK TO HOME (ANTI-LOADING BERULANG, ANTI-MACET PIHAK KETIGA, VIEWPORT ORIGINAL TRUE)
+  Smart WebView v8 - MBAH GADGET GLOBAL ANTI-STUCK SYSTEM (FIXED COMPILATION)
+  FIXED: 1X GLOBAL DIRECT BACK TO HOME (ANTI-LOADING MACET PIHAK KETIGA, VIEWPORT ORIGINAL TRUE, BUILD SUCCESS)
 */
 
 import android.Manifest;
@@ -107,20 +107,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // 🛠️ KUNCI SAKTI 1: INTERSEPTOR BACK SYSTEM VIRTUAL (ANTI-STUCK GLOBAL JALUR BARU)
+        // 🛠️ INTERSEPTOR BACK SYSTEM VIRTUAL (1X KLIK LANGSUNG BALIK BERANDA)
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 String currentUrl = SWVContext.asw_view.getUrl();
                 
-                // Jika posisi pembeli sudah berada pas di Beranda Utama SMM Panel
                 if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
-                    moveTaskToBack(true); // Langsung tidurkan aplikasi dengan aman ke RAM belakang (Siklus Facebook)
+                    moveTaskToBack(true); 
                 } else {
-                    // JIKA DI HALAMAN MANA PUN DI LUAR BERANDA (PAYDISINI, INVOICE, DLL) = STOP SEMUA LOADING & DIRECT PULANG INSTAN!
-                    SWVContext.asw_view.stopLoading(); // Patek mati loading halaman luar yang berputar/stuck
-                    SWVContext.asw_view.clearHistory(); // Hapus bersih jejak langkah kaki di situs pihak ketiga
-                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); // Tembak lurus kembali ke Beranda Utama
+                    SWVContext.asw_view.stopLoading(); 
+                    SWVContext.asw_view.clearHistory(); 
+                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
                 }
             }
         });
@@ -265,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setBuiltInZoomControls(true);   
         webSettings.setDisplayZoomControls(false); 
         
-        // KUNCI RESOLUSI: Mengaktifkan pengaturan awal orisinal yang antum inginkan
+        // VIEWPORT AKTIF SEMULA (TRUE)
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
@@ -456,20 +454,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    // 🛠️ KUNCI SAKTI 2: INTERSEPTOR HARDWARE BACK BUTTON HP (PUKUL RATA BYPASS GLOBAL)
+    // 🛠️ METHOD KUNCI YANG KETINGGALAN: UNTUK MENEMBAK ALAMAT WEB AWAL SAAT PERTAMA DIBUKA
+    private void handleIncomingIntents() {
+        fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
+    }
+
+    // 🛠️ HARDWARE BACK KEY INTERSEPTOR (1X GLOBAL DIRECT BACK KE BERANDA TANPA STUCK)
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             String currentUrl = SWVContext.asw_view.getUrl();
             
-            // Jika pembeli memencet back tepat di halaman utama
             if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
-                moveTaskToBack(true); // Masukkan aplikasi ke RAM latar belakang
+                moveTaskToBack(true); 
             } else {
-                // JIKA DI LINK LUAR PIHAK KETIGA MANA PUN = Matikan proses loading macet, hapus riwayat, hantam balik ke Beranda Dashboard!
-                SWVContext.asw_view.stopLoading(); // Kunci pemotong loading muter
-                SWVContext.asw_view.clearHistory(); // Kunci penghapus riwayat eksternal
-                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); // Eksekusi langsung ke halaman utama
+                SWVContext.asw_view.stopLoading(); 
+                SWVContext.asw_view.clearHistory(); 
+                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
             }
             return true;
         }
