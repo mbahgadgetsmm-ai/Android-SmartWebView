@@ -1,7 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET SUPER FAST INSTANT MODE (NO ANIMATION, NO DELAY)
+  Smart WebView v8 - MBAH GADGET SUPER FAST INSTANT MODE
+  FIXED: ONE SIGNAL, GOOGLE ANALYTICS GA4, DOWNLOAD, UPLOAD, QRIS & ZOOM ALL ACTIVE!
 */
 
 import android.Manifest;
@@ -56,7 +57,7 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull; // Memperbaiki error class NonNull
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -124,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final View content = findViewById(android.R.id.content);
         permissionManager = new PermissionManager(this);
 
+        // Jembatan Upload Gambar Tiket / Bukti Transfer
         fileUploadLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -169,6 +171,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         );
 
+        // Jembatan Scan QRIS
         qrScannerLauncher = registerForActivityResult(new ScanContract(),
                 result -> {
                     PluginInterface plugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
@@ -204,14 +207,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    // --- DISEDIAKAN KEMBALI AGAR BIOMETRIC PLUGIN TIDAK ERROR CRASH ---
     public void setWindowSecure(boolean secure) {
         runOnUiThread(() -> {
-            if (secure) {
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
-            } else {
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-            }
+            if (secure) getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
         });
     }
 
@@ -219,7 +218,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (SWVContext.ASWV_LAYOUT == 1) {
             setContentView(R.layout.drawer_main);
             MaterialToolbar toolbar = findViewById(R.id.toolbar);
-            final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
 
             if (SWVContext.ASWP_DRAWER_HEADER) {
                 findViewById(R.id.app_bar).setVisibility(View.VISIBLE);
@@ -246,6 +244,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void initializeWebView() {
+        Playground playground = new Playground(this, SWVContext.asw_view, fns);
+        SWVContext.getPluginManager().setPlayground(playground);
+
         WebSettings webSettings = SWVContext.asw_view.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
@@ -254,6 +255,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
+        // Mengunci Fitur Zoom Cubit Jari Biar Tetap Aktif di Gambar Tiket
+        webSettings.setSupportZoom(true);
+        webSettings.setBuiltInZoomControls(true);
+        webSettings.setDisplayZoomControls(false);
+
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
@@ -261,18 +267,60 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         SWVContext.asw_view.setWebViewClient(new WebViewCallback());
         SWVContext.asw_view.setWebChromeClient(createWebChromeClient());
+        
+        setupDownloadListener();
+    }
+
+    // Jembatan Download APK Mbah Gadget / Berkas Bukti
+    private void setupDownloadListener() {
+        SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
+            try {
+                DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+                String finalMimeType = mimeType;
+                if (finalMimeType == null || finalMimeType.equalsIgnoreCase("application/octet-stream")) {
+                    if (url.contains(".apk")) finalMimeType = "application/vnd.android.package-archive";
+                    else if (url.contains(".png")) finalMimeType = "image/png";
+                    else if (url.contains(".jpg") || url.contains(".jpeg")) finalMimeType = "image/jpeg";
+                }
+                request.setMimeType(finalMimeType);
+                String fileName = URLUtil.guessFileName(url, contentDisposition, finalMimeType);
+                
+                String cookies = CookieManager.getInstance().getCookie(url);
+                request.addRequestHeader("cookie", cookies);
+                request.addRequestHeader("User-Agent", userAgent);
+                request.setDescription("Downloading file...");
+                request.setTitle(fileName);
+                
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+                request.allowScanningByMediaScanner();
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+                DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                if (dm != null) {
+                    dm.enqueue(request);
+                    Toast.makeText(this, "Mendownload: " + fileName, Toast.LENGTH_LONG).show();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Download Error", e);
+            }
+        });
     }
 
     private WebChromeClient createWebChromeClient() {
         return new WebChromeClient() {
             @Override
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+                return fileProcessing.onShowFileChooser(webView, filePathCallback, fileChooserParams);
+            }
+
+            @Override
             public void onProgressChanged(WebView view, int p) {
-                // INSTANT TRANSMISSION: Begitu web ter-render 45% langsung sikat layar loading
+                // INSTANT TRANSMISSION: Load 45% langsung banting screen loading biar sat set!
                 if (p > 45) {
                     final View welcomeScreen = findViewById(R.id.msw_welcome);
                     if (SWVContext.asw_view != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
                         SWVContext.asw_view.setVisibility(View.VISIBLE);
-                        welcomeScreen.setVisibility(View.GONE); // Hilang seketika tanpa durasi jeda
+                        welcomeScreen.setVisibility(View.GONE);
                     }
                 }
             }
@@ -292,9 +340,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupSwipeRefresh();
         permissionManager.requestInitialPermissions();
 
+        // 🔥 AMUNISI 1: AKTIFKAN ENGINE ONESIGNAL NOTIFIKASI
         try {
             OneSignal.initWithContext(this);
             OneSignal.setAppId("e722a15b-0b07-4c82-a934-fcd0735704a2");
+            Log.d(TAG, "OneSignal Berhasil Disinkronkan!");
         } catch (Exception e) {
             Log.e(TAG, "OneSignal Init Error", e);
         }
@@ -304,7 +354,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
         if (pullRefresh != null) {
             pullRefresh.setRefreshing(false);
-            pullRefresh.setEnabled(false); // Blokir muter total sesuai Gambar 1
+            pullRefresh.setEnabled(false); // Spinner hitam atas mati permanen!
         }
     }
 
@@ -324,8 +374,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.onResume();
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
-                // SPEED REVOLUTION: Tanpa jeda Thread.sleep, langsung tembak URL target
-                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); // Tembak langsung tanpa delay thread sleep!
             }
         }
     }
@@ -338,8 +387,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 SWVContext.asw_view.setVisibility(View.VISIBLE);
                 welcomeScreen.setVisibility(View.GONE);
             }
+            
+            // 🔥 AMUNISI 2: SUNTIKAN OTOMATIS GOOGLE ANALYTICS GA4 KE WEBVIEW
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) {
                 fns.inject_gtag(view, SWVContext.ASWV_GTAG);
+                Log.d(TAG, "GA4 Tracking GTAG Berhasil Disuntikkan!");
             }
         }
 
