@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET GLOBAL HARD-RELOAD SYSTEM
-  FIXED: 1X GLOBAL BACK + HARD RELOAD WEB ENGINE (TOTAL KILL PLEASE WAIT LOADING, VIEWPORT ORIGINAL TRUE, BUILD SUCCESS)
+  Smart WebView v8 - MBAH GADGET DEPOSIT HISTORY ROUTE HIJACK
+  FIXED: AUTOMATIC DETECT FOR /deposit/history, CHROME BEHAVIOR FLUSH, ZERO STUCK LOADING, BUILD SUCCESS!
 */
 
 import android.Manifest;
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // 🛠️ KUNCI SAKTI VIRTUAL BACK: MEMAKSA HARD RELOAD ENGINE WEB UNTUK MEMBUNUH OVERLAY LOADING
+        // 🛠️ INTERSEPTOR TOMBOL BACK SYSTEM VIRTUAL HP
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -116,17 +116,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
                     moveTaskToBack(true); 
                 } else {
-                    // Kunci Pemutus Siklus Macet Visual: Lempar ke Beranda lalu hantam dengan reload mesin bersih!
-                    SWVContext.asw_view.stopLoading();
-                    SWVContext.asw_view.clearHistory();
-                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
-                    
-                    // Delay 100ms agar url utama map sempurna, lalu hantam reload() untuk meruntuhkan script loading web yang membeku
-                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                        if (SWVContext.asw_view != null) {
-                            SWVContext.asw_view.reload();
-                        }
-                    }, 100);
+                    executeCleanHomeRedirect();
                 }
             }
         });
@@ -264,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         
-        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         webSettings.setSupportZoom(true);          
@@ -418,6 +408,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private class WebViewCallback extends WebViewClient {
+        // 🛠️ RADAR DETEKSI INSTAN 1: Mencegat link tepat sebelum halaman web sempat dirender
+        @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            super.onPageStarted(view, url, favicon);
+            
+            // Mengunci target spesifik link riwayat deposit buatan web antum
+            if (url != null && (url.contains("/deposit/history") || url.contains("/history"))) {
+                // REBUT KENDALI: Potong paksa alur muat riwayat yang bikin stuck, belokkan langsung ke beranda bersih!
+                executeCleanHomeRedirect();
+            }
+        }
+
         @Override
         public void onPageFinished(WebView view, String url) {
             final View welcomeScreen = findViewById(R.id.msw_welcome);
@@ -426,6 +428,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 welcomeScreen.setVisibility(View.GONE);
             }
             
+            view.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
+
             view.loadUrl("javascript:(function() { " +
                     "var style = document.createElement('style'); " +
                     "style.innerHTML = 'img { max-width: 100% !important; height: auto !important; }'; " +
@@ -437,9 +441,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
+        // 🛠️ RADAR DETEKSI INSTAN 2: Mencegat tautan klik Ajax / Script internal web
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-            return fns.url_actions(view, request.getUrl().toString(), MainActivity.this);
+            String url = request.getUrl().toString();
+            
+            if (url.contains("/deposit/history") || url.contains("/history")) {
+                executeCleanHomeRedirect();
+                return true;
+            }
+            return fns.url_actions(view, url, MainActivity.this);
         }
 
         @Override
@@ -465,7 +476,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
     }
 
-    // 🛠️ KUNCI SAKTI HARDWARE KEY BACK HP: PAKSA REFRESH ENGINE GUNA MERUNTUHKAN OVERLAY AJAX LOADING
+    // 🛠️ MESIN REBUT SETIR UTAMA: MEMBERSIHKAN DATA SESI & REFRESH KE BERANDA UTAMA SEGAR CHROME
+    private void executeCleanHomeRedirect() {
+        if (SWVContext.asw_view != null) {
+            SWVContext.asw_view.stopLoading(); 
+            SWVContext.asw_view.clearHistory(); 
+            
+            // Gunakan metode LOAD_NO_CACHE agar WebView mengambil data murni dashboard terupdate dari server antum
+            SWVContext.asw_view.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+            SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
+        }
+    }
+
+    // 🛠️ HARDWARE BACK KEY INTERSEPTOR PHYSICAL MOBILE PHONE
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -474,17 +497,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
                 moveTaskToBack(true); 
             } else {
-                // Hentikan penumpukan data lama dari Paydisini
-                SWVContext.asw_view.stopLoading(); 
-                SWVContext.asw_view.clearHistory(); 
-                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
-                
-                // Beri jeda ketukan mesin Android, lalu paksa jalankan .reload() murni
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    if (SWVContext.asw_view != null) {
-                        SWVContext.asw_view.reload();
-                    }
-                }, 100);
+                executeCleanHomeRedirect();
             }
             return true;
         }
