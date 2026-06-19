@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET HYBRID FACEBOOK-PERSISTENCE + OFFLINE RECOVERY
-  FIXED: OFFLINE SCREEN WITH RETRY BUTTON, INSTANT RESUME, MOVE TO BACKGROUND ON BACK, RESPONSIVE TIKET IMAGE, ANTI-BIN QRIS, ONE SIGNAL, & GA4!
+  Smart WebView v8 - MBAH GADGET HYBRID ULTIMATE SYSTEM (FIXED VIEWPORT)
+  FIXED: CHROME PROPORTIONAL SIZE, RESPONSIVE TIKET IMAGE, DIRECT PINCH ZOOM, ANTI-BIN QRIS, FACEBOOK RESUME, OFFLINE SCREEN, ONE SIGNAL & GA4!
 */
 
 import android.Manifest;
@@ -107,13 +107,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
+        // INTERSEPTOR TOMBOL BACK: Mundur halaman web, atau lempar ke background RAM jika di Beranda (Siklus Facebook)
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 if (SWVContext.asw_view.canGoBack()) {
                     SWVContext.asw_view.goBack(); 
                 } else {
-                    moveTaskToBack(true); // Sembunyikan ke RAM latar belakang persis Facebook
+                    moveTaskToBack(true); 
                 }
             }
         });
@@ -125,6 +126,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final View content = findViewById(android.R.id.content);
         permissionManager = new PermissionManager(this);
 
+        // Jembatan Upload Bukti Pembayaran / Foto Tiket Kendala ke Server Web
         fileUploadLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -170,6 +172,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         );
 
+        // Jembatan Fitur Scan Barcode/QRIS
         qrScannerLauncher = registerForActivityResult(new ScanContract(),
                 result -> {
                     PluginInterface plugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
@@ -254,11 +257,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
+        // KONTROL SENSOR: Mengizinkan gerakan mencubit layar untuk membesarkan gambar tiket
         webSettings.setSupportZoom(true);          
         webSettings.setBuiltInZoomControls(true);   
         webSettings.setDisplayZoomControls(false); 
-        webSettings.setLoadWithOverviewMode(true);   
-        webSettings.setUseWideViewPort(true);        
+        
+        // ⚡ OBAAT RESPONSIVE: Mengubah ke FALSE agar skala menu deposit kembali normal singset pas layar seperti Google Chrome asli
+        webSettings.setLoadWithOverviewMode(false);   
+        webSettings.setUseWideViewPort(false);        
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
@@ -271,6 +277,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupDownloadListener();
     }
 
+    // ENGINE DOWNLOAD PINTAR: OTOMATIS MEMAKSA FORMAT GAMBAR QRIS DAN MENERIMA FILE APK (ANTI FILE .BIN RUSAK)
     private void setupDownloadListener() {
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
             try {
@@ -328,6 +335,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onProgressChanged(WebView view, int p) {
+                // INSTANT TRANSMISSION ACCELERATION: Load 40% langsung tembak antarmuka web toko agar ngacir
                 if (p > 40) {
                     final View welcomeScreen = findViewById(R.id.msw_welcome);
                     if (SWVContext.asw_view != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
@@ -364,7 +372,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
         if (pullRefresh != null) {
             pullRefresh.setRefreshing(false);
-            pullRefresh.setEnabled(false);
+            pullRefresh.setEnabled(false); // Spinner muter hitam atas mati permanen
         }
     }
 
@@ -377,6 +385,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    // SUPER TURBO KUNCI RESUME: Ketika kembali dibuka dari multitasking, langsung ambil isi halaman terakhir dari RAM tanpa reload
     @Override
     public void onResume() {
         super.onResume();
@@ -399,7 +408,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onPause() {
         super.onPause();
         if (SWVContext.asw_view != null) {
-            SWVContext.asw_view.onPause();
+            SWVContext.asw_view.onPause(); // Membekukan memori web aman di latar belakang
         }
     }
 
@@ -412,6 +421,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 welcomeScreen.setVisibility(View.GONE);
             }
             
+            // 🛠️ FIX REINFORCEMENT: INJEKSI CSS STRATEGIS AGAR GAMBAR CHAT TIKET OTOMATIS RESPONSIF PAS DENGAN LEBAR LAYAR HP
             view.loadUrl("javascript:(function() { " +
                     "var style = document.createElement('style'); " +
                     "style.innerHTML = 'img { max-width: 100% !important; height: auto !important; }'; " +
@@ -428,7 +438,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return fns.url_actions(view, request.getUrl().toString(), MainActivity.this);
         }
 
-        // 🛠️ MERESTORE KEMBALI FITUR DETEKSI OFFLINE BAWAAN ASLI (KUNCI RECOVERY)
+        // 🛠️ FITUR DETEKSI OFFLINE: Otomatis memicu tampilan error.html bawaan asli jika kuota habis / internet mati
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
@@ -437,9 +447,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Log.e(TAG, "Network Error Occurred: " + error.getDescription());
                     view.post(() -> {
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
-                            view.loadUrl(SWVContext.ASWV_OFFLINE_URL); // Tembak halaman offline custom dari config web
+                            view.loadUrl(SWVContext.ASWV_OFFLINE_URL); 
                         } else {
-                            view.loadUrl("file:///android_asset/error.html"); // Kembalikan ke berkas offline lokal asli
+                            view.loadUrl("file:///android_asset/error.html"); 
                         }
                     });
                 }
@@ -458,7 +468,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (SWVContext.asw_view.canGoBack()) {
                 SWVContext.asw_view.goBack();
             } else {
-                moveTaskToBack(true); 
+                moveTaskToBack(true); // Lempar aplikasi tidur ke RAM latar belakang (Siklus Facebook)
             }
             return true;
         }
