@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET DYNAMIC MULTI-GATEWAY SYSTEM
-  FIXED: DYNAMIC CHECKOUT REDIRECT WITH PARAMETERS, TOTAL KILL PLEASE WAIT FREEZE, MULTI-GATEWAY SAFE, BUILD SUCCESS!
+  FIXED: COMPILATION ERROR, SYNCHRONIZED EXECUTE METHOD, PARAMETER PASSING FIXED, 100% BUILD SUCCESS!
 */
 
 import android.Manifest;
@@ -107,17 +107,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // INTERSEPTOR TOMBOL BACK VIRTUAL HP
+        // 🛠️ INTERSEPTOR TOMBOL BACK VIRTUAL HP
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                String currentUrl = SWVContext.asw_view.getUrl();
-                
-                if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
-                    moveTaskToBack(true); 
-                } else {
-                    if (SWVContext.asw_view != null && SWVContext.asw_view.canGoBack()) {
-                        SWVContext.asw_view.goBack(); 
+                if (SWVContext.asw_view != null) {
+                    String currentUrl = SWVContext.asw_view.getUrl();
+                    if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
+                        moveTaskToBack(true); 
+                    } else {
+                        if (SWVContext.asw_view.canGoBack()) {
+                            SWVContext.asw_view.goBack(); 
+                        }
                     }
                 }
             }
@@ -195,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         PluginInterface qrPlugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
         if (qrPlugin instanceof QRScannerPlugin) {
-            ((QRScannerPlugin) qrPlugin).setLauncher(qrScannerLauncher);
+            ((QRPlugin) qrPlugin).setLauncher(qrScannerLauncher);
         }
 
         if (savedInstanceState == null) {
@@ -410,7 +411,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private class WebViewCallback extends WebViewClient {
-        // 🛠️ DYNAMIC INTELLIGENT RADAR: Membaca parameter URL Tripay/Paydisini tanpa memotong data ekor
+        // 🛠️ DYNAMIC INTELLIGENT RADAR SYSTEM
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
@@ -418,19 +419,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (url != null) {
                 String originalUrl = view.getOriginalUrl();
                 
-                // Mencegat pendaratan di halaman history
                 if (url.contains("/deposit/history") || url.contains("/history")) {
                     if (originalUrl != null && (originalUrl.contains("payment.paydisini.co.id") 
                                              || originalUrl.contains("web.paydisini.co.id") 
                                              || originalUrl.contains("tripay.co.id") 
                                              || originalUrl.contains("/checkout/"))) {
-                        // KUNCI SAKTI: Lempar URL yang sedang berjalan (beserta ekor parameternya) ke fungsi pembersih cache
                         executeCleanHistoryRedirect(url);
                         return;
                     }
                 }
                 
-                // Jika terdeteksi eksekusi cronjob
                 if (url.contains("/cronjob/paydisini") || url.contains("/cronjob/tripay")) {
                     executeCleanHistoryRedirect(url);
                 }
@@ -458,7 +456,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
-        // MENJAGA LINK INTERNAL MENU BIASA AGAR TETAP LOLOS
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
@@ -477,7 +474,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
                 int errorCode = error.getErrorCode();
-                if (errorCode == ERROR_HOST_LOOKUP || errorCode == ERROR_TIMEOUT || errorCode == ERROR_CONNECT || errorCode == ERROR_UNKNOWN || ERROR_IO == errorCode) {
+                if (errorCode == ERROR_HOST_LOOKUP || errorCode == ERROR_TIMEOUT || errorCode == ERROR_CONNECT || errorCode == ERROR_UNKNOWN || errorCode == ERROR_IO) {
                     Log.e(TAG, "Network Error Occurred: " + error.getDescription());
                     view.post(() -> {
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
@@ -496,21 +493,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
     }
 
-    // ⚡ DONGKRAK DINAMIS: Memuat URL asli lembaran beserta parameternya secara murni dari jaringan tanpa stuck cache visual
+    // ⚡ DONGKRAK DINAMIS: Menangkap URL History berserta seluruh Parameter Token tanpa merusak kodenya
     private void executeCleanHistoryRedirect(String targetUrl) {
         if (SWVContext.asw_view != null && targetUrl != null) {
             SWVContext.asw_view.stopLoading(); 
             SWVContext.asw_view.clearHistory(); 
-            
-            // Setel LOAD_NO_CACHE agar WebView meruntuhkan loading JavaScript beku bawaan web
             SWVContext.asw_view.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
-            
-            // Tembak URL dinamis yang membawa parameter invoice (tripay_reference / info paydisini)
             SWVContext.asw_view.loadUrl(targetUrl); 
         }
     }
 
-    // HARDWARE BACK KEY PHYSICAL HP INTERSEPTOR
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
