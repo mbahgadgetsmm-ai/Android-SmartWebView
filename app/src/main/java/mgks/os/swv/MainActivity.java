@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET GLOBAL ANTI-STUCK SYSTEM (FIXED COMPILATION)
-  FIXED: 1X GLOBAL DIRECT BACK TO HOME + AUTO REFRESH (ANTI-LOADING MACET PIHAK KETIGA, VIEWPORT ORIGINAL TRUE, VARIABLE TYPE FIXED, BUILD SUCCESS)
+  Smart WebView v8 - MBAH GADGET GLOBAL ANTI-STUCK SYSTEM (FORCE DISMISS LOADING)
+  FIXED: 1X GLOBAL DIRECT BACK TO HOME + JAVASCRIPT MODAL DISMISS (ANTI-LOADING STUCK PIHAK KETIGA, VIEWPORT ORIGINAL TRUE, BUILD SUCCESS)
 */
 
 import android.Manifest;
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // 🛠️ INTERSEPTOR BACK SYSTEM VIRTUAL (1X KLIK + AUTO REFRESH BERANDA)
+        // 🛠️ INTERSEPTOR BACK SYSTEM VIRTUAL (1X KLIK + HANCURKAN LAYAR LOADING)
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -118,6 +118,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } else {
                     SWVContext.asw_view.stopLoading(); 
                     SWVContext.asw_view.clearHistory(); 
+                    
+                    // ⚡ SUNTIKAN JAVASCRIPT 1: Cari elemen dialog modal "Please wait" di web lalu paksa hapus/sembunyikan dari layar sebelum muat ulang
+                    SWVContext.asw_view.loadUrl("javascript:(function(){ " +
+                            "var elements = document.getElementsByClassName('modal'); for(var i=0; i<elements.length; i++) { elements[i].style.display='none'; } " +
+                            "var loaders = document.querySelectorAll('[id*=\"loading\"], [class*=\"loading\"], [id*=\"wait\"], [class*=\"wait\"]'); for(var i=0; i<loaders.length; i++) { loaders[i].remove(); } " +
+                            "})()");
+                    
                     SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
                 }
             }
@@ -263,7 +270,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setBuiltInZoomControls(true);   
         webSettings.setDisplayZoomControls(false); 
         
-        // VIEWPORT AKTIF SEMULA (TRUE)
         webSettings.setLoadWithOverviewMode(true);   
         webSettings.setUseWideViewPort(true);        
 
@@ -389,7 +395,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onResume();
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.onResume();
-            // 🛠️ FIXED: Diubah menjadi nama variabel asli 'isFirstLaunchScanCheck' agar build sukses ijo
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
@@ -459,7 +464,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
     }
 
-    // 🛠 HARDWARE BACK KEY INTERSEPTOR: 1x BACK DARI LINK MANAPUN LANGSUNG REFRESH KE BERANDA UTAMA
+    // 🛠️ HARDWARE BACK KEY INTERSEPTOR: PUKUL RATA PENGHANCUR ELEMEN LOADING MEMBEKU
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -470,7 +475,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } else {
                 SWVContext.asw_view.stopLoading(); 
                 SWVContext.asw_view.clearHistory(); 
-                // REFRESH TOTAL: Memperbarui isi saldo secara realtime dan kilat tanpa loading berat
+                
+                // ⚡ SUNTIKAN JAVASCRIPT 2: Eksekusi paksa penghapusan elemen loading dari DOM HTML website
+                SWVContext.asw_view.loadUrl("javascript:(function(){ " +
+                        "var elements = document.getElementsByClassName('modal'); for(var i=0; i<elements.length; i++) { elements[i].style.display='none'; } " +
+                        "var loaders = document.querySelectorAll('[id*=\"loading\"], [class*=\"loading\"], [id*=\"wait\"], [class*=\"wait\"]'); for(var i=0; i<loaders.length; i++) { loaders[i].remove(); } " +
+                        "})()");
+                
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
             }
             return true;
