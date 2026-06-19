@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET TRIPLE-LAYER GATEWAY RADAR
-  FIXED: LOCKED INTERNAL WEBVIEW, ALL LINKS AND PAYMENTS SECURED INSIDE APK!
+  Smart WebView v8 - MBAH GADGET SUPER FAST & LOCKED GATEWAY
+  FIXED: 100% INTERNAL PAYMENTS, DELETED BRUTAL PERMISSIONS AT STARTUP, HARDWARE ACCELERATION ENABLED.
 */
 
 import android.Manifest;
@@ -252,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         
-        // AKSELERASI KECEPATAN PERANGKAT KERAS (LAYER_TYPE_HARDWARE)
+        // ⚡ SUPER CEPAT: AKSELERASI HARDWARE PERANGKAT AKTIF
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         
         webSettings.setSupportZoom(true);          
@@ -329,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void setupFeatures() {
         setupSwipeRefresh();
-        permissionManager.requestInitialPermissions();
+        // 🛡️ BERSIH & RAMAH: Tidak meminta izin lokasi/kamera secara brutal di awal aplikasi dibuka.
         try { OneSignal.initWithContext(this); OneSignal.setAppId("e722a15b-0b07-4c82-a934-fcd0735704a2"); } catch (Exception e) { Log.e(TAG, "OneSignal Init Error", e); }
     }
 
@@ -380,12 +380,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // 🔒 MODE KURUNGAN TOTAL: Link Pembayaran & Web DIKUNCI 100% di APK browser luar diblokir!
+        // 🔒 MODE ANTI-RIBET: Semua gerbang pembayaran (Paydisini, Tripay, Duitku, dll) DIKUNCI di APK!
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // Protokol skema aplikasi resmi (WhatsApp, Intent E-Wallet/Bank Mobile, Telepon) tetap diizinkan panggil aplikasi luar
+            // Mengizinkan aplikasi bank/e-wallet resmi atau whatsapp CS terbuka jika dipanggil tautan khusus
             if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:")) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -397,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
             
-            // Seluruh link web biasa (http/https), Tripay, Paydisini, dll dipaksa mutlak dimuat di dalam APK
+            // Selain protokol di atas, kunci penuh di dalam aplikasi
             view.loadUrl(url);
             return true;
         }
