@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET GLOBAL ANTI-STUCK SYSTEM (FIXED COMPILATION)
-  FIXED: 1X GLOBAL DIRECT BACK TO HOME (ANTI-LOADING MACET PIHAK KETIGA, VIEWPORT ORIGINAL TRUE, BUILD SUCCESS)
+  FIXED: 1X GLOBAL DIRECT BACK TO HOME + AUTO REFRESH (ANTI-LOADING MACET PIHAK KETIGA, VIEWPORT ORIGINAL TRUE, BUILD SUCCESS)
 */
 
 import android.Manifest;
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = "MainActivity";
     private boolean isFirstLaunchScanCheck = true;
 
-    static Functions fns = new Functions();
+    static Functions fns = fns = new Functions();
     private FileProcessing fileProcessing;
     private PermissionManager permissionManager;
     private ActivityResultLauncher<Intent> fileUploadLauncher;
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // 🛠️ INTERSEPTOR BACK SYSTEM VIRTUAL (1X KLIK LANGSUNG BALIK BERANDA)
+        // 🛠️ INTERSEPTOR BACK SYSTEM VIRTUAL (1X KLIK + AUTO REFRESH BERANDA)
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -118,7 +118,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } else {
                     SWVContext.asw_view.stopLoading(); 
                     SWVContext.asw_view.clearHistory(); 
-                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
+                    // ⚡ REFRESH TOTAL: Paksa memuat ulang beranda agar saldo langsung terupdate realtime
+                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
                 }
             }
         });
@@ -389,7 +390,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onResume();
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.onResume();
-            if (isFirstLaunchScanCheck) {
+            if (isFirstLaunchCheck) {
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
             } else {
@@ -454,12 +455,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    // 🛠️ METHOD KUNCI YANG KETINGGALAN: UNTUK MENEMBAK ALAMAT WEB AWAL SAAT PERTAMA DIBUKA
     private void handleIncomingIntents() {
         fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
     }
 
-    // 🛠️ HARDWARE BACK KEY INTERSEPTOR (1X GLOBAL DIRECT BACK KE BERANDA TANPA STUCK)
+    // 🛠 *HARDWARE BACK KEY INTERSEPTOR*: 1x BACK DARI LINK MANAPUN LANGSUNG REFRESH KE BERANDA UTAMA
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -470,6 +470,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } else {
                 SWVContext.asw_view.stopLoading(); 
                 SWVContext.asw_view.clearHistory(); 
+                // ⚡ REFRESH TOTAL: Paksa panggil ulang halaman utama agar tidak ada stuck loading/freeze saldo
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
             }
             return true;
