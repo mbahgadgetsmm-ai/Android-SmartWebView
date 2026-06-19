@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST TURBO RESUME
-  FIXED: ONE SIGNAL, GA4, DOWNLOAD, UPLOAD, QRIS, ZOOM & INSTANT RESUME CACHE ACTIVE!
+  FIXED: SAKTI ANTI-BIN QRIS DOWNLOAD, ONE SIGNAL, GA4, DOWNLOAD, UPLOAD, QRIS & INSTANT RESUME ACTIVE!
 */
 
 import android.Manifest;
@@ -125,7 +125,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final View content = findViewById(android.R.id.content);
         permissionManager = new PermissionManager(this);
 
-        // Jembatan Upload Gambar Tiket / Bukti Transfer
         fileUploadLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -171,7 +170,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         );
 
-        // Jembatan Scan QRIS
         qrScannerLauncher = registerForActivityResult(new ScanContract(),
                 result -> {
                     PluginInterface plugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
@@ -253,7 +251,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         
-        // ⚡ FIX CACHE MODE: Membaca cache internal biar buka kembali langsung INSTAN kilat!
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
@@ -272,23 +269,43 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupDownloadListener();
     }
 
+    // 🛠️ RACIKAN ULANG SAKTI: ENGINE DOWNLOAD ANTI-BIN KHUSUS GAMBAR QRIS DEPOSIT
     private void setupDownloadListener() {
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
             try {
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+                
+                // 1. Tebak nama file & format aslinya dari data header server
+                String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
                 String finalMimeType = mimeType;
-                if (finalMimeType == null || finalMimeType.equalsIgnoreCase("application/octet-stream")) {
-                    if (url.contains(".apk")) finalMimeType = "application/vnd.android.package-archive";
-                    else if (url.contains(".png")) finalMimeType = "image/png";
-                    else if (url.contains(".jpg") || url.contains(".jpeg")) finalMimeType = "image/jpeg";
+
+                // 2. Kunci Utama: Jika server mengirim file mentah atau nama file berujung .bin
+                if (finalMimeType == null || finalMimeType.equalsIgnoreCase("application/octet-stream") || fileName.endsWith(".bin")) {
+                    // Cek jika ini pemicu dari tombol invoice/deposit/qris di web, langsung paksa jadi PNG
+                    if (url.contains("qris") || url.contains("deposit") || url.contains("invoice") || url.contains("gate")) {
+                        finalMimeType = "image/png";
+                        fileName = "QRIS_Mbah_Gadget_" + System.currentTimeMillis() + ".png";
+                    } 
+                    // Cek jika ini file APK
+                    else if (url.contains(".apk")) {
+                        finalMimeType = "application/vnd.android.package-archive";
+                        fileName = URLUtil.guessFileName(url, contentDisposition, finalMimeType);
+                    } 
+                    // Deteksi universal fallback gambar
+                    else {
+                        finalMimeType = "image/png";
+                        if (fileName.endsWith(".bin")) {
+                            fileName = fileName.replace(".bin", ".png");
+                        }
+                    }
                 }
+
                 request.setMimeType(finalMimeType);
-                String fileName = URLUtil.guessFileName(url, contentDisposition, finalMimeType);
                 
                 String cookies = CookieManager.getInstance().getCookie(url);
                 request.addRequestHeader("cookie", cookies);
                 request.addRequestHeader("User-Agent", userAgent);
-                request.setDescription("Downloading file...");
+                request.setDescription("Mendownload berkas...");
                 request.setTitle(fileName);
                 
                 request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
@@ -315,7 +332,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onProgressChanged(WebView view, int p) {
-                if (p > 40) { // Lebih cepat dibuka kembali
+                if (p > 40) {
                     final View welcomeScreen = findViewById(R.id.msw_welcome);
                     if (SWVContext.asw_view != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
                         SWVContext.asw_view.setVisibility(View.VISIBLE);
@@ -364,17 +381,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    // ⚡ FIX TOTAL ONRESUME: Mengembalikan fungsi pemulihan sesi Android asli agar kembali instan
     @Override
     public void onResume() {
         super.onResume();
         if (SWVContext.asw_view != null) {
-            SWVContext.asw_view.onResume(); // Mengembalikan perintah siklus hidup sistem Android asli
+            SWVContext.asw_view.onResume();
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
             } else {
-                // Sesi dipulihkan instan dari cache lokal, tidak reload kosong dari 0
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
                 if (welcomeScreen != null) {
                     SWVContext.asw_view.setVisibility(View.VISIBLE);
@@ -388,7 +403,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onPause() {
         super.onPause();
         if (SWVContext.asw_view != null) {
-            SWVContext.asw_view.onPause(); // Menjaga memori aman di latar belakang
+            SWVContext.asw_view.onPause();
         }
     }
 
