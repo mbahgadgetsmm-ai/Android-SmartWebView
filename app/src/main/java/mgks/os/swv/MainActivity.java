@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET SUPER FAST INSTANT MODE
-  FIXED: ONE SIGNAL, GOOGLE ANALYTICS GA4, DOWNLOAD, UPLOAD, QRIS & ZOOM ALL ACTIVE!
+  Smart WebView v8 - MBAH GADGET SUPER FAST TURBO RESUME
+  FIXED: ONE SIGNAL, GA4, DOWNLOAD, UPLOAD, QRIS, ZOOM & INSTANT RESUME CACHE ACTIVE!
 */
 
 import android.Manifest;
@@ -252,10 +252,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setDomStorageEnabled(true);
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
-        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        
+        // ⚡ FIX CACHE MODE: Membaca cache internal biar buka kembali langsung INSTAN kilat!
+        webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
-        // Mengunci Fitur Zoom Cubit Jari Biar Tetap Aktif di Gambar Tiket
         webSettings.setSupportZoom(true);
         webSettings.setBuiltInZoomControls(true);
         webSettings.setDisplayZoomControls(false);
@@ -271,7 +272,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupDownloadListener();
     }
 
-    // Jembatan Download APK Mbah Gadget / Berkas Bukti
     private void setupDownloadListener() {
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
             try {
@@ -315,8 +315,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onProgressChanged(WebView view, int p) {
-                // INSTANT TRANSMISSION: Load 45% langsung banting screen loading biar sat set!
-                if (p > 45) {
+                if (p > 40) { // Lebih cepat dibuka kembali
                     final View welcomeScreen = findViewById(R.id.msw_welcome);
                     if (SWVContext.asw_view != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
                         SWVContext.asw_view.setVisibility(View.VISIBLE);
@@ -340,11 +339,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupSwipeRefresh();
         permissionManager.requestInitialPermissions();
 
-        // 🔥 AMUNISI 1: AKTIFKAN ENGINE ONESIGNAL NOTIFIKASI
         try {
             OneSignal.initWithContext(this);
             OneSignal.setAppId("e722a15b-0b07-4c82-a934-fcd0735704a2");
-            Log.d(TAG, "OneSignal Berhasil Disinkronkan!");
         } catch (Exception e) {
             Log.e(TAG, "OneSignal Init Error", e);
         }
@@ -354,7 +351,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
         if (pullRefresh != null) {
             pullRefresh.setRefreshing(false);
-            pullRefresh.setEnabled(false); // Spinner hitam atas mati permanen!
+            pullRefresh.setEnabled(false);
         }
     }
 
@@ -367,15 +364,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    // ⚡ FIX TOTAL ONRESUME: Mengembalikan fungsi pemulihan sesi Android asli agar kembali instan
     @Override
     public void onResume() {
         super.onResume();
         if (SWVContext.asw_view != null) {
-            SWVContext.asw_view.onResume();
+            SWVContext.asw_view.onResume(); // Mengembalikan perintah siklus hidup sistem Android asli
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
-                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); // Tembak langsung tanpa delay thread sleep!
+                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+            } else {
+                // Sesi dipulihkan instan dari cache lokal, tidak reload kosong dari 0
+                final View welcomeScreen = findViewById(R.id.msw_welcome);
+                if (welcomeScreen != null) {
+                    SWVContext.asw_view.setVisibility(View.VISIBLE);
+                    welcomeScreen.setVisibility(View.GONE);
+                }
             }
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (SWVContext.asw_view != null) {
+            SWVContext.asw_view.onPause(); // Menjaga memori aman di latar belakang
         }
     }
 
@@ -388,10 +401,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 welcomeScreen.setVisibility(View.GONE);
             }
             
-            // 🔥 AMUNISI 2: SUNTIKAN OTOMATIS GOOGLE ANALYTICS GA4 KE WEBVIEW
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) {
                 fns.inject_gtag(view, SWVContext.ASWV_GTAG);
-                Log.d(TAG, "GA4 Tracking GTAG Berhasil Disuntikkan!");
             }
         }
 
