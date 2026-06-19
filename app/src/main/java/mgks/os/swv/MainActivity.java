@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET SUPER FAST & LOCKED GATEWAY
-  FIXED: 100% INTERNAL PAYMENTS, DELETED BRUTAL PERMISSIONS AT STARTUP, HARDWARE ACCELERATION ENABLED.
+  Smart WebView v8 - MBAH GADGET SUPER FAST & 2-PERMISSION LOCK
+  FIXED: 100% INTERNAL PAYMENTS, 2 PERMISSIONS AT STARTUP (NOTIF & MEDIA), HARDWARE ACCELERATION ENABLED.
 */
 
 import android.Manifest;
@@ -329,7 +329,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void setupFeatures() {
         setupSwipeRefresh();
-        // 🛡️ BERSIH & RAMAH: Tidak meminta izin lokasi/kamera secara brutal di awal aplikasi dibuka.
+        // 🚀 MODE SAPU BERSIH: Meminta izin (Notifikasi & Galeri/Media) sekaligus pas baru buka setelah instal.
+        if (permissionManager != null) {
+            permissionManager.requestInitialPermissions();
+        }
         try { OneSignal.initWithContext(this); OneSignal.setAppId("e722a15b-0b07-4c82-a934-fcd0735704a2"); } catch (Exception e) { Log.e(TAG, "OneSignal Init Error", e); }
     }
 
@@ -385,7 +388,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // Mengizinkan aplikasi bank/e-wallet resmi atau whatsapp CS terbuka jika dipanggil tautan khusus
             if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:")) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -397,7 +399,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
             
-            // Selain protokol di atas, kunci penuh di dalam aplikasi
             view.loadUrl(url);
             return true;
         }
