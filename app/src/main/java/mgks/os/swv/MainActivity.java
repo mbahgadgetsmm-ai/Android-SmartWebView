@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET DEPOSIT HISTORY ROUTE HIJACK
-  FIXED: AUTOMATIC DETECT FOR /deposit/history, CHROME BEHAVIOR FLUSH, ZERO STUCK LOADING, BUILD SUCCESS!
+  Smart WebView v8 - MBAH GADGET DYNAMIC MULTI-GATEWAY SYSTEM
+  FIXED: DYNAMIC CHECKOUT REDIRECT WITH PARAMETERS, TOTAL KILL PLEASE WAIT FREEZE, MULTI-GATEWAY SAFE, BUILD SUCCESS!
 */
 
 import android.Manifest;
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // 🛠️ INTERSEPTOR TOMBOL BACK SYSTEM VIRTUAL HP
+        // INTERSEPTOR TOMBOL BACK VIRTUAL HP
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -116,7 +116,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
                     moveTaskToBack(true); 
                 } else {
-                    executeCleanHomeRedirect();
+                    if (SWVContext.asw_view != null && SWVContext.asw_view.canGoBack()) {
+                        SWVContext.asw_view.goBack(); 
+                    }
                 }
             }
         });
@@ -408,15 +410,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private class WebViewCallback extends WebViewClient {
-        // 🛠️ RADAR DETEKSI INSTAN 1: Mencegat link tepat sebelum halaman web sempat dirender
+        // 🛠️ DYNAMIC INTELLIGENT RADAR: Membaca parameter URL Tripay/Paydisini tanpa memotong data ekor
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
             
-            // Mengunci target spesifik link riwayat deposit buatan web antum
-            if (url != null && (url.contains("/deposit/history") || url.contains("/history"))) {
-                // REBUT KENDALI: Potong paksa alur muat riwayat yang bikin stuck, belokkan langsung ke beranda bersih!
-                executeCleanHomeRedirect();
+            if (url != null) {
+                String originalUrl = view.getOriginalUrl();
+                
+                // Mencegat pendaratan di halaman history
+                if (url.contains("/deposit/history") || url.contains("/history")) {
+                    if (originalUrl != null && (originalUrl.contains("payment.paydisini.co.id") 
+                                             || originalUrl.contains("web.paydisini.co.id") 
+                                             || originalUrl.contains("tripay.co.id") 
+                                             || originalUrl.contains("/checkout/"))) {
+                        // KUNCI SAKTI: Lempar URL yang sedang berjalan (beserta ekor parameternya) ke fungsi pembersih cache
+                        executeCleanHistoryRedirect(url);
+                        return;
+                    }
+                }
+                
+                // Jika terdeteksi eksekusi cronjob
+                if (url.contains("/cronjob/paydisini") || url.contains("/cronjob/tripay")) {
+                    executeCleanHistoryRedirect(url);
+                }
             }
         }
 
@@ -441,14 +458,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
-        // 🛠️ RADAR DETEKSI INSTAN 2: Mencegat tautan klik Ajax / Script internal web
+        // MENJAGA LINK INTERNAL MENU BIASA AGAR TETAP LOLOS
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            if (url.contains("/deposit/history") || url.contains("/history")) {
-                executeCleanHomeRedirect();
-                return true;
+            if (url.contains("mbahgadget.co.id")) {
+                if (url.contains("/cronjob/")) {
+                    executeCleanHistoryRedirect(url);
+                    return true;
+                }
+                return false; 
             }
             return fns.url_actions(view, url, MainActivity.this);
         }
@@ -457,7 +477,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
                 int errorCode = error.getErrorCode();
-                if (errorCode == ERROR_HOST_LOOKUP || errorCode == ERROR_TIMEOUT || errorCode == ERROR_CONNECT || errorCode == ERROR_UNKNOWN || errorCode == ERROR_IO) {
+                if (errorCode == ERROR_HOST_LOOKUP || errorCode == ERROR_TIMEOUT || errorCode == ERROR_CONNECT || errorCode == ERROR_UNKNOWN || ERROR_IO == errorCode) {
                     Log.e(TAG, "Network Error Occurred: " + error.getDescription());
                     view.post(() -> {
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
@@ -476,28 +496,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
     }
 
-    // 🛠️ MESIN REBUT SETIR UTAMA: MEMBERSIHKAN DATA SESI & REFRESH KE BERANDA UTAMA SEGAR CHROME
-    private void executeCleanHomeRedirect() {
-        if (SWVContext.asw_view != null) {
+    // ⚡ DONGKRAK DINAMIS: Memuat URL asli lembaran beserta parameternya secara murni dari jaringan tanpa stuck cache visual
+    private void executeCleanHistoryRedirect(String targetUrl) {
+        if (SWVContext.asw_view != null && targetUrl != null) {
             SWVContext.asw_view.stopLoading(); 
             SWVContext.asw_view.clearHistory(); 
             
-            // Gunakan metode LOAD_NO_CACHE agar WebView mengambil data murni dashboard terupdate dari server antum
+            // Setel LOAD_NO_CACHE agar WebView meruntuhkan loading JavaScript beku bawaan web
             SWVContext.asw_view.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
-            SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
+            
+            // Tembak URL dinamis yang membawa parameter invoice (tripay_reference / info paydisini)
+            SWVContext.asw_view.loadUrl(targetUrl); 
         }
     }
 
-    // 🛠️ HARDWARE BACK KEY INTERSEPTOR PHYSICAL MOBILE PHONE
+    // HARDWARE BACK KEY PHYSICAL HP INTERSEPTOR
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            String currentUrl = SWVContext.asw_view.getUrl();
-            
-            if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
-                moveTaskToBack(true); 
+            if (SWVContext.asw_view != null && SWVContext.asw_view.canGoBack()) {
+                SWVContext.asw_view.goBack();
             } else {
-                executeCleanHomeRedirect();
+                moveTaskToBack(true);
             }
             return true;
         }
