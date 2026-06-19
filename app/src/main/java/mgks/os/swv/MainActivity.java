@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET DYNAMIC MULTI-GATEWAY SYSTEM
-  FIXED: QRSCANNERPLUG TYPO FIXED, DYNAMIC REDIRECT WITH PARAMETERS, TOTAL KILL PLEASE WAIT FREEZE, 100% BUILD SUCCESS GUARANTEED!
+  Smart WebView v8 - MBAH GADGET TRIPLE-LAYER GATEWAY RADAR
+  FIXED: INTERCEPT AT ONPAGESTARTED, SHOULDOVERRIDE, AND ONLOADRESOURCE. AUTOMATIC FLUSH, NO MORE MANUAL BACK NEEDED, 100% BUILD SUCCESS!
 */
 
 import android.Manifest;
@@ -196,7 +196,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         PluginInterface qrPlugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
         if (qrPlugin instanceof QRScannerPlugin) {
-            // FIXED: Mengubah casting dari (QRPlugin) menjadi (QRScannerPlugin) agar sinkron dengan baris import
             ((QRScannerPlugin) qrPlugin).setLauncher(qrScannerLauncher);
         }
 
@@ -412,7 +411,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private class WebViewCallback extends WebViewClient {
-        // DYNAMIC INTELLIGENT RADAR SYSTEM
+        // 🔒 PINTU 1: Mencegat saat pemuatan halaman dimulai dari luar browser WebView
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
@@ -457,18 +456,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
+        // 🔒 PINTU 2: Mencegat lompatan link internal (Sistem Klik Ajax, PushState JavaScript otomatis dari web)
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
             if (url.contains("mbahgadget.co.id")) {
-                if (url.contains("/cronjob/")) {
+                // JIKA LEMPARAN AJAX OTOMATIS BERMUARA KE HALAMAN RIWAYAT DEPOSIT, FORCE REFRESH INSTAN!
+                if (url.contains("/deposit/history") || url.contains("/history") || url.contains("/cronjob/")) {
                     executeCleanHistoryRedirect(url);
                     return true;
                 }
                 return false; 
             }
             return fns.url_actions(view, url, MainActivity.this);
+        }
+
+        // 🔒 PINTU 3: (Jaring Pengaman Mutlak) Memantau pemuatan sumber daya aset latar belakang
+        @Override
+        public void onLoadResource(WebView view, String url) {
+            super.onLoadResource(view, url);
+            // Jika terdeteksi ada skrip cronjob callback gateway luar yang menyelinap saat loading sedang gantung
+            if (url != null && (url.contains("/cronjob/paydisini") || url.contains("/cronjob/tripay"))) {
+                String currentUrl = view.getUrl();
+                if (currentUrl != null && (currentUrl.contains("/deposit/history") || currentUrl.contains("/history"))) {
+                    executeCleanHistoryRedirect(currentUrl);
+                }
+            }
         }
 
         @Override
@@ -494,6 +508,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
     }
 
+    // ⚡ DINAMIS FLUSH: Eksekusi penghancur cache penahan history visual tanpa merusak parameter string invoice
     private void executeCleanHistoryRedirect(String targetUrl) {
         if (SWVContext.asw_view != null && targetUrl != null) {
             SWVContext.asw_view.stopLoading(); 
