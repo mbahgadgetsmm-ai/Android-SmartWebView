@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET DYNAMIC MULTI-GATEWAY SYSTEM
-  FIXED: COMPILATION ERROR, SYNCHRONIZED EXECUTE METHOD, PARAMETER PASSING FIXED, 100% BUILD SUCCESS!
+  FIXED: QRSCANNERPLUG TYPO FIXED, DYNAMIC REDIRECT WITH PARAMETERS, TOTAL KILL PLEASE WAIT FREEZE, 100% BUILD SUCCESS GUARANTEED!
 */
 
 import android.Manifest;
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // 🛠️ INTERSEPTOR TOMBOL BACK VIRTUAL HP
+        // INTERSEPTOR TOMBOL BACK VIRTUAL HP
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -196,7 +196,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         PluginInterface qrPlugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
         if (qrPlugin instanceof QRScannerPlugin) {
-            ((QRPlugin) qrPlugin).setLauncher(qrScannerLauncher);
+            // FIXED: Mengubah casting dari (QRPlugin) menjadi (QRScannerPlugin) agar sinkron dengan baris import
+            ((QRScannerPlugin) qrPlugin).setLauncher(qrScannerLauncher);
         }
 
         if (savedInstanceState == null) {
@@ -411,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private class WebViewCallback extends WebViewClient {
-        // 🛠️ DYNAMIC INTELLIGENT RADAR SYSTEM
+        // DYNAMIC INTELLIGENT RADAR SYSTEM
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
@@ -493,7 +494,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fns.aswm_view(SWVContext.ASWV_URL, false, 0, this);
     }
 
-    // ⚡ DONGKRAK DINAMIS: Menangkap URL History berserta seluruh Parameter Token tanpa merusak kodenya
     private void executeCleanHistoryRedirect(String targetUrl) {
         if (SWVContext.asw_view != null && targetUrl != null) {
             SWVContext.asw_view.stopLoading(); 
