@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET SUPER FAST TURBO RESUME
-  FIXED: AUTO-RESPONSIVE IMAGE TIKET, DIRECT PINCH ZOOM, ANTI-BIN QRIS, ONE SIGNAL, GA4 & INSTANT RESUME ACTIVE!
+  Smart WebView v8 - MBAH GADGET TURBO HYBRID SYSTEM
+  FIXED: INSTANT PERFORMANCE + RESPONSIVE TIKET IMAGE, DIRECT PINCH ZOOM, ANTI-BIN QRIS, ONE SIGNAL, & GA4 ACTIVE!
 */
 
 import android.Manifest;
@@ -125,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final View content = findViewById(android.R.id.content);
         permissionManager = new PermissionManager(this);
 
+        // Jembatan Upload Bukti Pembayaran / Foto Tiket Kendala
         fileUploadLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -170,6 +171,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         );
 
+        // Jembatan Integrasi Scan Barcode/QRIS
         qrScannerLauncher = registerForActivityResult(new ScanContract(),
                 result -> {
                     PluginInterface plugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
@@ -254,14 +256,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
-        // 🛠️ KUNCI 1: MEMBUAT GAMBAR DI TIKET RESPONSIF MENYESUAIKAN LEBAR LAYAR HP HP
-        webSettings.setUseWideViewPort(true);       // Membuka viewport web seluas layar perangkat
-        webSettings.setLoadWithOverviewMode(true);  // Memaksa konten gambar mengecil otomatis pas layar HP
-
-        // 🛠️ KUNCI 2: AKTIFKAN SENSOR MULTI-SENTUH UNTUK MENCUBIT GAMBAR DI TIKET
-        webSettings.setSupportZoom(true);
-        webSettings.setBuiltInZoomControls(true);
-        webSettings.setDisplayZoomControls(false); // Sembunyikan tombol zoom bawaan Google yang mengganggu layar
+        // 🛠️ MERESTORE KONFIGURASI RESPONSIF GAMBAR ASLI DARI SMART WEBVIEW
+        webSettings.setSupportZoom(true);          
+        webSettings.setBuiltInZoomControls(true);   
+        webSettings.setDisplayZoomControls(false); 
+        webSettings.setLoadWithOverviewMode(true);   
+        webSettings.setUseWideViewPort(true);        
 
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
@@ -274,6 +274,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupDownloadListener();
     }
 
+    // 🛠️ ENGINE DOWNLOAD PINTAR: OTOMATIS MEMAKSA FORMAT GAMBAR QRIS DAN MENERIMA FILE APK
     private void setupDownloadListener() {
         SWVContext.asw_view.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
             try {
@@ -331,6 +332,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onProgressChanged(WebView view, int p) {
+                // INSTANT TRANSMISSION ACCELERATION (Load 40% langsung tembak UI web agar ngacir)
                 if (p > 40) {
                     final View welcomeScreen = findViewById(R.id.msw_welcome);
                     if (SWVContext.asw_view != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
@@ -367,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
         if (pullRefresh != null) {
             pullRefresh.setRefreshing(false);
-            pullRefresh.setEnabled(false);
+            pullRefresh.setEnabled(false); // Spinner muter tetap mati permanen
         }
     }
 
@@ -387,7 +389,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.onResume();
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
-                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); // Tembak langsung, NO SLOW THREAD SLEEP 0.6s
             } else {
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
                 if (welcomeScreen != null) {
@@ -415,7 +417,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 welcomeScreen.setVisibility(View.GONE);
             }
             
-            // 🛠️ KUNCI 3: INJEKSI CSS REINFORCEMENT AGAR GAMBAR TIKET AMAN TIMBAL BALIK (MUTLAK RESPONSIF)
+            // 🛠️ FIX REINFORCEMENT: INJEKSI KODE JAVASCRIPT AGAR SEMUA GAMBAR TIKET MENYESUAIKAN LEBAR LAYAR HP
             view.loadUrl("javascript:(function() { " +
                     "var style = document.createElement('style'); " +
                     "style.innerHTML = 'img { max-width: 100% !important; height: auto !important; }'; " +
