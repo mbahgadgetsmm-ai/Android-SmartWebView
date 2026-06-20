@@ -27,7 +27,7 @@ android {
 		minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
 		targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
 		
-		// 🚀 UPDATE ANTI REFRESH KECOLONGAN: VERSI 8.1.2 (SIAP INSTANT UPDATE)
+		// 🚀 UPDATE ANTI REFRESH KECOLONGAN: VERSI 8.1.2
 		versionCode = 18
 		versionName = "8.1.2"
 		
@@ -62,7 +62,7 @@ dependencies {
 	implementation 'com.google.firebase:firebase-auth:24.1.0'
 	implementation 'com.google.firebase:firebase-config:23.1.0'
 	implementation 'com.google.firebase:firebase-messaging:25.0.2'
-	implementation 'com.google.firebase:firebase-analytics:23.2.0' [cite: 2]
+	implementation 'com.google.firebase:firebase-analytics:23.2.0'
 
 	implementation 'com.google.android.gms:play-services-auth:21.6.0'
 	implementation 'com.google.android.gms:play-services-ads:24.9.0'
@@ -88,5 +88,5 @@ dependencies {
 if (file('google-services.json').exists()) {
 	apply plugin: 'com.google.gms.google-services'
 } else {
-	println "swv-fcm-sync: google-services.json not found. Skipping Firebase Configuration." [cite: 3]
+	println "swv-fcm-sync: google-services.json not found. Skipping Firebase Configuration."
 }
