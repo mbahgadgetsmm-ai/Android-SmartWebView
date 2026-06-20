@@ -1,8 +1,8 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET SUPER FAST & 2-PERMISSION LOCK
-  FIXED: 100% INTERNAL PAYMENTS, 2 PERMISSIONS AT STARTUP (NOTIF & MEDIA), HARDWARE ACCELERATION ENABLED.
+  Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
+  FIXED: 100% INTERNAL PAYMENTS, 4 PERMISSIONS AT STARTUP (NORMAL & STABLE), HARDWARE ACCELERATION ENABLED.
 */
 
 import android.Manifest;
@@ -329,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void setupFeatures() {
         setupSwipeRefresh();
-        // 🚀 MODE SAPU BERSIH: Meminta izin (Notifikasi & Galeri/Media) sekaligus pas baru buka setelah instal.
+        // 🚀 NORMAL MODE: Meminta 4 izin bawaan sistem agar fitur video, kamera, dan tiket tidak crash
         if (permissionManager != null) {
             permissionManager.requestInitialPermissions();
         }
@@ -383,7 +383,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // 🔒 MODE ANTI-RIBET: Semua gerbang pembayaran (Paydisini, Tripay, Duitku, dll) DIKUNCI di APK!
+        // 🔒 ALL INTERNAL PAYMENTS: Semua link pembayaran ditahan di dalam APK
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
