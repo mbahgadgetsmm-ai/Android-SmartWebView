@@ -27,9 +27,9 @@ android {
 		minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
 		targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
 		
-		// --- VERSI SUDAH DINAIKKAN UNTUK INSTANT MODE UPDATE ---
-		versionCode = 16
-		versionName = "8.1.0"
+		// 🚀 UPDATE RESMI: VERSI 8.1.1 (SIAP DITIMPA / UPDATE INSTAN)
+		versionCode = 17
+		versionName = "8.1.1"
 		
 		multiDexEnabled = true
 	}
@@ -86,7 +86,7 @@ dependencies {
 }
 
 if (file('google-services.json').exists()) {
-    apply plugin: 'com.google.gms.google-services'
+	apply plugin: 'com.google.gms.google-services'
 } else {
-    println "swv-fcm-sync: google-services.json not found. Skipping Firebase Configuration."
+	println "swv-fcm-sync: google-services.json not found. Skipping Firebase Configuration."
 }
