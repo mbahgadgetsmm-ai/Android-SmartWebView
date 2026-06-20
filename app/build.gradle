@@ -27,9 +27,9 @@ android {
 		minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
 		targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
 		
-		// 🚀 UPDATE ANTI REFRESH KECOlongan: VERSI 8.1.2 (SIAP INSTANT UPDATE)
-		versionCode = 18
-		versionName = "8.1.2"
+		// 🚀 UPDATE RESMI: VERSI 8.1.1 (SIAP DITIMPA / UPDATE INSTAN)
+		versionCode = 17
+		versionName = "8.1.1"
 		
 		multiDexEnabled = true
 	}
