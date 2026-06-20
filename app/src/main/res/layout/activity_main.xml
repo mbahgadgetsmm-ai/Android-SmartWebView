@@ -12,9 +12,8 @@
 	<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 		android:id="@+id/pullfresh"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent">
-
-		<RelativeLayout
+		android:layout_height="match_parent"
+		android:enabled="false"> <RelativeLayout
 			android:layout_width="match_parent"
 			android:layout_height="match_parent">
 
@@ -61,6 +60,7 @@
 		android:layout_height="wrap_content"
 		android:layout_gravity="bottom"
 		android:orientation="vertical"/>
+	
 	<ProgressBar
 		android:id="@+id/msw_progress"
 		style="?android:attr/progressBarStyleHorizontal"
