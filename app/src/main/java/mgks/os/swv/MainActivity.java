@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% PAYDISINI REDIRECT, ANTI-BLANK WHITE ON BACK FROM DANA, CHROMIUM WEBVIEW AUTO-RECOVERY.
+  FIXED: 100% PAYDISINI JAVASCRIPT CRASH PROTECTION, CHROMIUM HARD-RENDER RECOVERY (ANTI-BLANK TOTAL).
 */
 
 import android.Manifest;
@@ -112,8 +112,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (lastUrl != null) {
                 sharedPrefs.edit().remove("last_payment_url").apply();
                 SWVContext.asw_view.loadUrl(lastUrl);
-            } else if (SWVContext.asw_view.getUrl() == null || SWVContext.asw_view.getUrl().equals("about:blank")) {
-                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
             }
         }
     }
@@ -281,11 +279,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setLoadsImagesAutomatically(true);
-        webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         
+        // Kunci penyimpanan data lokal agar DOM JavaScript Paydisini stabil
         webSettings.setDatabaseEnabled(true);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         
+        // MATIKAN TRANSPARANSI BACKGROUND KARENA SERING MEMBUAT LAYAR CHROMIUM MENJADI PUTIH HANTU
+        SWVContext.asw_view.setBackgroundColor(Color.parseColor("#FFFFFF"));
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         
         webSettings.setSupportZoom(true);          
@@ -391,6 +391,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    // ⚡ PEMULIHAN LAYOUT JAVASCRIPT MUTLAK SAAT KEMBALI DARI DANA
     @Override
     public void onResume() {
         super.onResume();
@@ -406,10 +407,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.resumeTimers(); 
 
             SWVContext.asw_view.setVisibility(View.VISIBLE);
-            SWVContext.asw_view.requestFocus();
-            SWVContext.asw_view.requestFocusFromTouch();
-
-            // Siasat Jitu: Matikan hardware acceleration untuk membuang frame putih hantu yang membeku
+            
+            // Hancurkan cache visual rendering dengan mematikan akselerasi hardware sesaat
             SWVContext.asw_view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
             final View welcomeScreen = findViewById(R.id.msw_welcome);
@@ -431,22 +430,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
                 }
             } else {
+                // JIKA HALAMAN MENJADI HANCUR/KOSONG KARENA PROSES BACKGROUND CRASH
                 if (SWVContext.asw_view.getUrl() == null || SWVContext.asw_view.getUrl().equals("about:blank")) {
                     String lastUrl = sharedPrefs.getString("last_payment_url", null);
                     if (lastUrl != null) {
-                        sharedPrefs.edit().remove("last_payment_url").apply();
                         SWVContext.asw_view.loadUrl(lastUrl);
                     } else {
                         SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
                     }
                 } else {
-                    // Paksa memicu ulang invalidasi gambar tanpa merusak state halaman aktif
-                    SWVContext.asw_view.clearFocus();
-                    SWVContext.asw_view.requestFocus();
+                    // Kunci Utama: Suntikkan perintah evaluasi DOM kosong untuk memaksa JavaScript Paydisini menggambar ulang dirinya tanpa memuat ulang koneksi internet
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        SWVContext.asw_view.evaluateJavascript("if(document.body){document.body.style.display='none';document.body.offsetHeight;document.body.style.display='';}", null);
+                    } else {
+                        SWVContext.asw_view.loadUrl("javascript:if(document.body){document.body.offsetTop;}");
+                    }
                 }
             }
 
-            // Kembalikan ke GPU rendering setelah 250 milidetik agar halaman Paydisini langsung tergambar sempurna
+            // Kembalikan ke performa kartu grafis asli (Hardware GPU) setelah DOM stabil digambar ulang
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (SWVContext.asw_view != null) {
                     SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
@@ -486,14 +488,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // Simpan setiap pergerakan halaman invoice ke memori fisik HP
             if (url.startsWith("http://") || url.startsWith("https://")) {
-                if (url.contains("checkout") || url.contains("pay") || url.contains("tripay") || url.contains("duitku") || url.contains("xendit") || url.contains("midtrans")) {
+                if (url.contains("pay") || url.contains("checkout")) {
                     sharedPrefs.edit().putString("last_payment_url", url).apply();
                 }
             }
 
-            // 👑 INTERSEPTOR KHUSUS DEEP-LINKING DOMPET DIGITAL (Hadang ERR_UNKNOWN_URL_SCHEME)
+            // Kunci Utama Deep Linking Dompet Digital (Mencegah net::ERR_UNKNOWN_URL_SCHEME)
             if (url.startsWith("whatsapp:") || url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:") || 
                 url.startsWith("dana:") || url.startsWith("danaid:") || url.startsWith("ovo:") || url.startsWith("gopay:") || url.startsWith("shopeepay:")) {
                 try {
@@ -510,28 +511,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if (url.startsWith("dana:") || url.startsWith("danaid:")) {
                             Intent marketIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=id.dana"));
                             view.getContext().startActivity(marketIntent);
-                        } else if (url.startsWith("ovo:")) {
-                            Intent marketIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=id.co.ovo"));
-                            view.getContext().startActivity(marketIntent);
                         }
                     } catch (Exception marketEx) {
-                        Log.e(TAG, "Gagal membuka store: " + marketEx.getMessage());
+                        Log.e(TAG, "Gagal membuka store");
                     }
                     return true; 
                 }
             }
 
-            // 🔥 PERBAIKAN UTAMA: Biarkan WebView memproses pengalihan internal (redirect) web perbankan/Paydisini secara alami 
-            // Jangan paksa memanggil view.loadUrl(url) secara manual di sini untuk menghindari frame macet / blank putih hantu.
+            // PERBAIKAN FATAL JAVASCRIPT REDIRECT PAYDISINI:
+            // Biarkan WebView mengolah rantai perpindahan halaman secara natural. Return false mencegah siklus loop render kosong yang memicu layar putih.
             if (url.startsWith("http://") || url.startsWith("https://")) {
                 if (url.contains("tiktok.com") || url.contains("facebook.com") || url.contains("instagram.com") || 
-                    url.contains("shopee") || url.contains("x.com") || url.contains("youtube.com") || url.contains("snackvideo")) {
+                    url.contains("shopee") || url.contains("x.com") || url.contains("youtube.com")) {
                     view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
                     view.post(() -> view.loadUrl(url));
                     return true;
                 } else {
                     view.getSettings().setUserAgentString(null);
-                    return false; // Return false membiarkan WebView mengolah rantai redirect otomatis dari Paydisini dengan mulus
+                    return false; 
                 }
             }
 
@@ -554,7 +552,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }
             } catch (URISyntaxException e) {
-                Log.e(TAG, "Kesalahan intent: " + e.getMessage());
+                Log.e(TAG, "Intent error");
             }
 
             return false;
@@ -564,7 +562,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
                 String failingUrl = request.getUrl().toString();
-                
                 if (failingUrl.contains("mbahgadget.co.id")) {
                     view.post(() -> {
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
@@ -581,8 +578,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             view.loadDataWithBaseURL(null, htmlData, "text/html", "UTF-8", null);
                         }
                     });
-                } else {
-                    Log.d(TAG, "Abaikan pemicu error untuk tautan luar: " + failingUrl);
                 }
             }
             super.onReceivedError(view, request, error);
