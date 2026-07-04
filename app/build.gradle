@@ -19,17 +19,19 @@ def getSwvProperties() {
 def swvProps = getSwvProperties()
 
 android {
-	namespace = 'mgks.os.swv'
+	// ➔ NAMESPACE SUDAH DIGANTI: Mengunci ke identitas Mbah Gadget agar bersih dari 'mgks'
+	namespace = 'com.mbah.gadget' 
 	compileSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
 
 	defaultConfig {
-		applicationId = swvProps.getProperty('build.application.id', 'com.mbah.gadget')
+		// ➔ APPLICATION ID SUDAH DIGANTI: Mengunci ke domain aplikasi Anda
+		applicationId = 'com.mbah.gadget'
 		minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
 		targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
 		
-		// 🚀 UPDATE ANTI REFRESH KECOLONGAN: VERSI 8.1.2
-		versionCode = 18
-		versionName = "8.1.2"
+		// 🚀 UPDATE ANTI REFRESH KECOLONGAN: VERSI 8.1.3 (Dinaikkan dari 18 / 8.1.2)
+		versionCode = 19
+		versionName = "8.1.3"
 		
 		multiDexEnabled = true
 	}
