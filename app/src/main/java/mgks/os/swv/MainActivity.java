@@ -265,6 +265,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setAllowUniversalAccessFromFileURLs(true);
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            webSettings.setSafeBrowsingEnabled(false);
+        }
+
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
         cookieManager.setAcceptThirdPartyCookies(SWVContext.asw_view, true);
@@ -387,11 +391,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // 🚀 KUNCI FIX JARINGAN: Memaksa WebView mengabaikan error SSL Handshake agar internet tidak diputus paksa saat memuat media luar
         @Override
         @SuppressLint("WebViewClientOnReceivedSslError")
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-            handler.proceed(); // Menembus blokir jaringan SSL hantu pihak ketiga
+            handler.proceed(); 
         }
 
         @Override
@@ -410,6 +413,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             
             if (url.startsWith("https://")) {
+                // 🚀 USER AGENT FAKER AUTOMATION: Jika mendeteksi domain tiktok, paksa WebView menyamar jadi Chrome Android Asli
+                if (url.contains("tiktok.com")) {
+                    view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
+                } else {
+                    // Jika kembali ke web Anda, kembalikan ke format default swv.properties
+                    view.getSettings().setUserAgentString(null);
+                }
+                
                 view.post(() -> view.loadUrl(url));
                 return true; 
             }
