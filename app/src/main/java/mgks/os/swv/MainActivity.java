@@ -411,15 +411,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
             
-            // 🔥 SOLUSI FINISH: Jika link eksternal adalah TikTok, potong di sini secara bersih
+            // 🛡️ MODIFIKASI FIX DATA TYPE: Jalur bypass untuk link TikTok luar
             if (url.contains("tiktok.com")) {
                 view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
                 view.post(() -> view.loadUrl(url));
                 return true; 
             }
             
-            // Kembalikan ke penanganan String URL murni bawaan fungsi internal Smart WebView agar tidak crash tipe data
-            return fns.aswm_view(url, false, 0, MainActivity.this);
+            // Panggil void secara mandiri tanpa menggunakan return statement
+            fns.aswm_view(url, false, 0, MainActivity.this);
+            return false; // Mengembalikan tipe boolean yang valid ke sistem WebView
         }
 
         @Override
