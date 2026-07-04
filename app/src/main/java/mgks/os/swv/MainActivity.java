@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS, DEEP LINK OUTSIDE APPS (DANA/OVO/GOPAY), NO BLANK SCREEN ON RESUME.
+  FIXED: 100% INTERNAL PAYMENTS, DEEP LINK DANAID:// SUCCESS FIX, NO BLANK SCREEN ON RESUME.
 */
 
 import android.Manifest;
@@ -88,7 +88,7 @@ import mgks.os.swv.plugins.QRScannerPlugin;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = "MainActivity";
     private boolean isFirstLaunchScanCheck = true;
-    private String lastVisitedUrlBeforePayment = null; // Menyimpan histori URL terakhir sebelum lempar ke DANA/OVO
+    private String lastVisitedUrlBeforePayment = null; 
 
     static Functions fns = new Functions();
     private FileProcessing fileProcessing;
@@ -253,7 +253,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         
-        // Mengamankan database lokal transaksi agar tidak terhapus saat berpindah ke DANA
         webSettings.setDatabaseEnabled(true);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         
@@ -362,7 +361,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    // ⚡ PERBAIKAN PEMULIHAN APLIKASI LUAR (ANTI BLANK PUTIH DANA/OVO)
     @Override
     public void onResume() {
         super.onResume();
@@ -374,7 +372,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.requestFocus();
             SWVContext.asw_view.requestFocusFromTouch();
 
-            // Paksa Android merender ulang tampilan grafis WebView yang terhapus OS
+            // Force Redraw Grafis WebView
             SWVContext.asw_view.invalidate();
             SWVContext.asw_view.requestLayout();
 
@@ -391,16 +389,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
             } else {
-                // PENANGKAL UTAMA: Jika setelah kembali dari aplikasi DANA terdeteksi blank putih/kosong
                 if (SWVContext.asw_view.getUrl() == null || SWVContext.asw_view.getUrl().equals("about:blank")) {
                     if (lastVisitedUrlBeforePayment != null) {
-                        // Muat kembali URL tagihan/invoice terakhir sebelum dilempar keluar
                         SWVContext.asw_view.loadUrl(lastVisitedUrlBeforePayment);
                     } else {
                         SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
                     }
                 } else {
-                    // Refresh DOM JavaScript ringan agar halaman payment gateway bangun kembali
                     SWVContext.asw_view.loadUrl("javascript:if(document.body){document.body.offsetTop;}");
                 }
             }
@@ -412,7 +407,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onPause();
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.onPause();
-            // JANGAN panggil pauseTimers() di sini agar koneksi session/cookie halaman payment gateway tidak putus di background
         }
     }
 
@@ -437,39 +431,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // Simpan otomatis URL halaman invoice/gateway saat ini sebelum terlempar keluar
             if (url.startsWith("http://") || url.startsWith("https://")) {
                 if (url.contains("checkout") || url.contains("pay") || url.contains("tripay") || url.contains("duitku") || url.contains("xendit") || url.contains("midtrans")) {
                     lastVisitedUrlBeforePayment = url;
                 }
             }
 
-            // Handler Khusus Eksekusi Lempar Aplikasi Luar (DANA, OVO, GOPAY, LinkAja, BANK)
-            if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:") || 
-                url.startsWith("dana:") || url.startsWith("ovo:") || url.startsWith("gopay:") || url.startsWith("shopeepay:")) {
+            // 👑 HANDLER UTAMA: Interseptor khusus skema DANAID, DANA, OVO, GOPAY, ShopeePay asli
+            if (url.startsWith("whatsapp:") || url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:") || 
+                url.startsWith("dana:") || url.startsWith("danaid:") || url.startsWith("ovo:") || url.startsWith("gopay:") || url.startsWith("shopeepay:")) {
                 try {
-                    Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-                    if (intent != null) {
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-                        view.getContext().startActivity(intent);
-                        return true;
-                    }
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+                    view.getContext().startActivity(intent);
+                    return true; 
                 } catch (Exception e) {
-                    // Jika aplikasi dompet digitalnya tidak terinstall di HP user, arahkan ke Play Store atau fallback URL browser
                     try {
-                        Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-                        String fallbackUrl = intent.getStringExtra("browser_fallback_url");
-                        if (fallbackUrl != null) {
-                            view.loadUrl(fallbackUrl);
-                            return true;
+                        if (url.startsWith("dana:") || url.startsWith("danaid:")) {
+                            Intent marketIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=id.dana"));
+                            view.getContext().startActivity(marketIntent);
+                        } else if (url.startsWith("ovo:")) {
+                            Intent marketIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=id.co.ovo"));
+                            view.getContext().startActivity(marketIntent);
                         }
-                    } catch (Exception ex) {
-                        Log.e(TAG, "Gagal meluncurkan intent luar: " + ex.getMessage());
+                    } catch (Exception marketEx) {
+                        Log.e(TAG, "Gagal meluncurkan pasar unduhan: " + marketEx.getMessage());
                     }
-                    return true;
+                    return true; 
                 }
             }
 
+            // 1. Jalur Tautan Web Standar HTTP/HTTPS
             if (url.startsWith("http://") || url.startsWith("https://")) {
                 if (url.contains("tiktok.com") || url.contains("facebook.com") || url.contains("instagram.com") || 
                     url.contains("shopee") || url.contains("x.com") || url.contains("youtube.com") || url.contains("snackvideo")) {
@@ -481,25 +473,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return true;
             }
 
-            // Mesin Cerdas Universal Intent Handler cadangan
+            // 2. Detektor Skema Tautan Bersifat "intent://"
             try {
-                Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-                if (intent != null) {
-                    PackageManager packageManager = view.getContext().getPackageManager();
-                    if (intent.resolveActivity(packageManager) != null) {
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        view.getContext().startActivity(intent);
-                        return true;
-                    } else {
-                        String fallbackUrl = intent.getStringExtra("browser_fallback_url");
-                        if (fallbackUrl != null) {
-                            view.loadUrl(fallbackUrl);
+                if (url.startsWith("intent:")) {
+                    Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                    if (intent != null) {
+                        PackageManager packageManager = view.getContext().getPackageManager();
+                        if (intent.resolveActivity(packageManager) != null) {
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            view.getContext().startActivity(intent);
                             return true;
+                        } else {
+                            String fallbackUrl = intent.getStringExtra("browser_fallback_url");
+                            if (fallbackUrl != null) {
+                                view.loadUrl(fallbackUrl);
+                                return true;
+                            }
                         }
                     }
                 }
             } catch (URISyntaxException e) {
-                Log.e(TAG, "Format link salah atau tidak didukung: " + e.getMessage());
+                Log.e(TAG, "Kesalahan sintaks intent: " + e.getMessage());
             }
 
             return false;
