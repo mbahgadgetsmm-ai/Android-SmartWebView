@@ -410,17 +410,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     return true;
                 }
             }
+
+            // ➔ HADANG SKEMA HANTU TIKTOK: Mengubah paksa snssdk:// menjadi tautan HTTPS web murni
+            if (url.startsWith("snssdk")) {
+                String fixedUrl = url;
+                if (url.contains("aweme/detail/")) {
+                    // Ekstrak ID video unik dari tautan snssdk untuk dibentuk ulang
+                    String[] parts = url.split("aweme/detail/");
+                    if (parts.length > 1) {
+                        String videoId = parts[1].split("\\?")[0];
+                        fixedUrl = "https://www.tiktok.com/video/" + videoId;
+                    }
+                }
+                final String finalUrl = fixedUrl;
+                view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
+                view.post(() -> view.loadUrl(finalUrl));
+                return true;
+            }
             
-            // 🛡️ MODIFIKASI FIX DATA TYPE: Jalur bypass untuk link TikTok luar
             if (url.contains("tiktok.com")) {
                 view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
                 view.post(() -> view.loadUrl(url));
                 return true; 
             }
             
-            // Panggil void secara mandiri tanpa menggunakan return statement
             fns.aswm_view(url, false, 0, MainActivity.this);
-            return false; // Mengembalikan tipe boolean yang valid ke sistem WebView
+            return false;
         }
 
         @Override
