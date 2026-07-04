@@ -406,25 +406,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     view.getContext().startActivity(intent);
                     return true;
                 } catch (Exception e) {
-                    Log.e(TAG, "Gagal meluncurkan intent sistem luar: " + e.getMessage());
+                    Log.e(TAG, "Gagal meluncurkan intent luar: " + e.getMessage());
                     return true;
                 }
             }
             
-            if (url.startsWith("https://")) {
-                // 🛡️ STRUKTUR YANG BENAR: Bypass murni link luar agar lolos compile dan kebal layar hijau
-                if (!url.contains("mbahgadget.co.id")) {
-                    if (url.contains("tiktok.com")) {
-                        view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
-                    } else {
-                        view.getSettings().setUserAgentString(null);
-                    }
-                    view.post(() -> view.loadUrl(url));
-                    return true;
-                }
+            // 🔥 SOLUSI FINISH: Jika link eksternal adalah TikTok, potong di sini secara bersih
+            if (url.contains("tiktok.com")) {
+                view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
+                view.post(() -> view.loadUrl(url));
+                return true; 
             }
             
-            return super.shouldOverrideUrlLoading(view, request);
+            // Kembalikan ke penanganan String URL murni bawaan fungsi internal Smart WebView agar tidak crash tipe data
+            return fns.aswm_view(url, false, 0, MainActivity.this);
         }
 
         @Override
