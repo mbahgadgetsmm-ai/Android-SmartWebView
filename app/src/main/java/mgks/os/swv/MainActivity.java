@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS, 4 PERMISSIONS AT STARTUP (NORMAL & STABLE), HARDWARE ACCELERATION ENABLED.
+  FIXED: 100% INTERNAL PAYMENTS, 4 PERMISSIONS AT STARTUP, HARDWARE ACCELERATION, & AUTO-RECONNECT ENABLED.
 */
 
 import android.Manifest;
@@ -363,6 +363,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onResume();
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.onResume();
+            
+            // 🛡️ MODIFIKASI: Selalu todong 4 izin dasar di startup demi kelancaran fitur upload/kamera
+            if (permissionManager != null) {
+                permissionManager.requestInitialPermissions();
+            }
+
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
@@ -397,16 +403,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             handler.proceed(); 
         }
 
-        // 🌐 LOGIKA WEB UNIVERSAL MENYERUPAI GOOGLE CHROME SEJATI
+        // 🌐 LOGIKA NAVIGASI UNIVERSAL SEPERTI GOOGLE CHROME
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // 1. Amankan skema tautan web standar HTTPS internal
+            // 1. Amankan skema tautan web standar HTTP/HTTPS internal & eksternal
             if (url.startsWith("http://") || url.startsWith("https://")) {
-                // Konfigurasi otomatis User Agent agar disukai sistem keamanan server luar
                 if (url.contains("tiktok.com") || url.contains("facebook.com") || url.contains("instagram.com") || 
-                    url.contains("shopee") || url.contains("x.com") || url.contains("youtube.com")) {
+                    url.contains("shopee") || url.contains("x.com") || url.contains("youtube.com") || url.contains("snackvideo")) {
                     view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
                 } else {
                     view.getSettings().setUserAgentString(null);
@@ -415,18 +420,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return true;
             }
 
-            // 2. Mesin Cerdas Universal Intent Bawaan Google Chrome
+            // 2. Mesin Cerdas Universal Intent Handler (Hadang ERR_UNKNOWN_URL_SCHEME)
             try {
                 Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
                 if (intent != null) {
-                    // Cari tahu apakah aplikasi tujuan (seperti Shopee/TikTok/WhatsApp asli) terinstal di HP user
                     PackageManager packageManager = view.getContext().getPackageManager();
                     if (intent.resolveActivity(packageManager) != null) {
-                        // Jika aplikasi ada, buka aplikasinya dengan mulus (100% Bebas dari ERR_UNKNOWN_URL_SCHEME)
                         view.getContext().startActivity(intent);
                         return true;
                     } else {
-                        // Jika aplikasi resminya TIDAK ADA di HP user, cari link web cadangan di dalam intent tersebut
                         String fallbackUrl = intent.getStringExtra("browser_fallback_url");
                         if (fallbackUrl != null) {
                             view.loadUrl(fallbackUrl);
@@ -438,27 +440,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Log.e(TAG, "Format link salah atau tidak didukung: " + e.getMessage());
             }
 
-            // 3. Fallback alternatif terakhir untuk skema deep link non-intent murni (seperti tel:, whatsapp:, dll.)
+            // 3. Fallback sistem komunikasi esensial (tel:, whatsapp:, sms:, dll.)
             try {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 view.getContext().startActivity(intent);
                 return true;
             } catch (Exception e) {
                 Log.e(TAG, "Aplikasi luar tidak ditemukan untuk tautan: " + url);
-                return true; // Paksa return true agar tidak melempar eror abu-abu Android
+                return true; 
             }
         }
 
+        // 🛠️ MODIFIKASI: Fitur Auto-Reconnect Instan saat HP kembali Online
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
                 String failingUrl = request.getUrl().toString();
+                
                 if (failingUrl.contains("mbahgadget.co.id")) {
                     view.post(() -> {
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
                             view.loadUrl(SWVContext.ASWV_OFFLINE_URL);
                         } else {
-                            view.loadUrl("file:///android_asset/error.html");
+                            // Suntik halaman error interaktif dengan tombol muat ulang toko instan
+                            String htmlData = "<html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                                    "<style>body { font-family: sans-serif; text-align: center; padding-top: 60px; color: #333; background-color:#f9f9f9; }" +
+                                    ".btn { display: inline-block; padding: 14px 28px; margin-top: 25px; background-color: #00C853; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }</style>" +
+                                    "</head><body>" +
+                                    "<h2>Koneksi Internet Terputus</h2>" +
+                                    "<p>Pastikan paket data atau Wi-Fi Anda aktif, lalu coba lagi.</p>" +
+                                    "<button class='btn' onclick='window.location.href=\"" + SWVContext.ASWV_URL + "\"'>Muat Ulang Toko</button>" +
+                                    "</body></html>";
+                            view.loadDataWithBaseURL(null, htmlData, "text/html", "UTF-8", null);
                         }
                     });
                 } else {
