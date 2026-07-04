@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS, SHARED-PREFERENCES PERSISTENT STORAGE, SWIPEREFRESH LAYER CRASH FIX (ANTI-BLANK).
+  FIXED: 100% INTERNAL PAYMENTS, PAYDISINI INTEGRATION, CHROMIUM HARD-REFRESH RENDER GUARD (NO MANUALLY BACK NEEDED).
 */
 
 import android.Manifest;
@@ -101,6 +101,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
         SWVContext.getPluginManager().onActivityResult(requestCode, resultCode, intent);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (SWVContext.asw_view != null) {
+            String lastUrl = sharedPrefs.getString("last_payment_url", null);
+            if (lastUrl != null) {
+                sharedPrefs.edit().remove("last_payment_url").apply();
+                SWVContext.asw_view.loadUrl(lastUrl);
+            } else if (SWVContext.asw_view.getUrl() == null || SWVContext.asw_view.getUrl().equals("about:blank")) {
+                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+            }
+        }
     }
 
     @Override
@@ -376,13 +391,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    // ⚡ PERBAIKAN TOTAL: Melibas tuntas bug SwipeRefreshLayout & Refresh Layer Grafis HP
+    // 👑 JALUR AMAN: Menyentak paksa siklus render grafis Chromium (Babat Habis Layar Putih)
     @Override
     public void onResume() {
         super.onResume();
         if (SWVContext.asw_view != null) {
-            
-            // Matikan paksa cache rendering SwipeRefreshLayout yang sering mengunci layar menjadi putih
             final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
             if (pullRefresh != null) {
                 pullRefresh.setRefreshing(false);
@@ -393,15 +406,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.onResume();
             SWVContext.asw_view.resumeTimers(); 
 
-            // Alihkan sementara ke software rendering agar CPU membangun ulang grafis perbankan yang hilang
-            SWVContext.asw_view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-
             SWVContext.asw_view.setVisibility(View.VISIBLE);
             SWVContext.asw_view.requestFocus();
             SWVContext.asw_view.requestFocusFromTouch();
 
-            SWVContext.asw_view.invalidate();
-            SWVContext.asw_view.requestLayout();
+            // Siasat Jitu: Paksa matikan hardware acceleration sebentar saat resume untuk membersihkan cache putih hantu
+            SWVContext.asw_view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
             final View welcomeScreen = findViewById(R.id.msw_welcome);
             if (welcomeScreen != null) {
@@ -431,15 +441,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
                     }
                 } else {
-                    // Kembalikan ke mode hardware akselerasi secara halus setelah rendering software sukses digambar
-                    SWVContext.asw_view.postDelayed(() -> {
-                        if (SWVContext.asw_view != null) {
-                            SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-                        }
-                    }, 300);
-                    SWVContext.asw_view.loadUrl("javascript:if(document.body){document.body.offsetTop;}");
+                    // JURUS PAMUNGKAS: Lakukan penyegaran paksa layer internal WebView
+                    SWVContext.asw_view.clearFocus();
+                    SWVContext.asw_view.requestFocus();
                 }
             }
+
+            // Bangunkan kembali akselerasi grafis GPU 150 milidetik kemudian agar halaman rendering normal otomatis
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (SWVContext.asw_view != null) {
+                    SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                    SWVContext.asw_view.invalidate();
+                    SWVContext.asw_view.requestLayout();
+                }
+            }, 150);
         }
     }
 
