@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS, NO BLANK WHITE SCREEN ON RESUME, AUTO-RECONNECT & UNIVERSAL INTENT ENABLED.
+  FIXED: 100% INTERNAL PAYMENTS, HARDWARE FORCE INVALIDATE ON RESUME (NO BLANK SCREEN), AUTO-RECONNECT & UNIVERSAL INTENT.
 */
 
 import android.Manifest;
@@ -358,16 +358,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    // ⚡ PERBAIKAN UTAMA: Manajemen Bangun Siklus Hidup (Anti-Blank Putih)
+    // ⚡ PERBAIKAN TOTAL: Force Redraw & Window Focus (Babat Habis Layar Blank Putih)
     @Override
     public void onResume() {
         super.onResume();
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.onResume();
-            SWVContext.asw_view.resumeTimers(); // Membangunkan kembali pengolah JavaScript internal
+            SWVContext.asw_view.resumeTimers(); 
 
-            // Paksa komponen WebView agar seketika terlihat di layar
             SWVContext.asw_view.setVisibility(View.VISIBLE);
+            SWVContext.asw_view.requestFocus();
+            SWVContext.asw_view.requestFocusFromTouch();
+
+            // Paksa rendering ulang mesin grafis Android yang crash saat background
+            SWVContext.asw_view.invalidate();
+            SWVContext.asw_view.requestLayout();
 
             final View welcomeScreen = findViewById(R.id.msw_welcome);
             if (welcomeScreen != null) {
@@ -382,9 +387,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
             } else {
-                // Jika kembali dari background dan terdeteksi blank kosong, muat ulang URL Toko Utama Anda
                 if (SWVContext.asw_view.getUrl() == null || SWVContext.asw_view.getUrl().equals("about:blank")) {
                     SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+                } else {
+                    // Trik penyegaran DOM JavaScript ringkas tanpa refresh jaringan
+                    SWVContext.asw_view.loadUrl("javascript:document.body.offsetTop;");
                 }
             }
         }
@@ -395,7 +402,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onPause();
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.onPause();
-            SWVContext.asw_view.pauseTimers(); // Membekukan sementara aktivitas skrip saat di background
+            SWVContext.asw_view.pauseTimers(); 
         }
     }
 
@@ -484,7 +491,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
                             view.loadUrl(SWVContext.ASWV_OFFLINE_URL);
                         } else {
-                            // Suntik halaman error interaktif dengan tombol muat ulang toko instan
                             String htmlData = "<html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
                                     "<style>body { font-family: sans-serif; text-align: center; padding-top: 60px; color: #333; background-color:#f9f9f9; }" +
                                     ".btn { display: inline-block; padding: 14px 28px; margin-top: 25px; background-color: #00C853; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }</style>" +
