@@ -78,6 +78,7 @@ import com.journeyapps.barcodescanner.ScanOptions;
 import com.onesignal.OneSignal;
 
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -396,53 +397,62 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             handler.proceed(); 
         }
 
+        // 🌐 LOGIKA WEB UNIVERSAL MENYERUPAI GOOGLE CHROME SEJATI
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:")) {
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    view.getContext().startActivity(intent);
-                    return true;
-                } catch (Exception e) {
-                    Log.e(TAG, "Gagal meluncurkan intent luar: " + e.getMessage());
-                    return true;
+            // 1. Amankan skema tautan web standar HTTPS internal
+            if (url.startsWith("http://") || url.startsWith("https://")) {
+                // Konfigurasi otomatis User Agent agar disukai sistem keamanan server luar
+                if (url.contains("tiktok.com") || url.contains("facebook.com") || url.contains("instagram.com") || 
+                    url.contains("shopee") || url.contains("x.com") || url.contains("youtube.com")) {
+                    view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
+                } else {
+                    view.getSettings().setUserAgentString(null);
                 }
-            }
-
-            // ➔ HADANG SKEMA HANTU TIKTOK: Mengubah paksa snssdk:// menjadi tautan HTTPS web murni
-            if (url.startsWith("snssdk")) {
-                String fixedUrl = url;
-                if (url.contains("aweme/detail/")) {
-                    // Ekstrak ID video unik dari tautan snssdk untuk dibentuk ulang
-                    String[] parts = url.split("aweme/detail/");
-                    if (parts.length > 1) {
-                        String videoId = parts[1].split("\\?")[0];
-                        fixedUrl = "https://www.tiktok.com/video/" + videoId;
-                    }
-                }
-                final String finalUrl = fixedUrl;
-                view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
-                view.post(() -> view.loadUrl(finalUrl));
+                view.post(() -> view.loadUrl(url));
                 return true;
             }
-            
-            if (url.contains("tiktok.com")) {
-                view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
-                view.post(() -> view.loadUrl(url));
-                return true; 
+
+            // 2. Mesin Cerdas Universal Intent Bawaan Google Chrome
+            try {
+                Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                if (intent != null) {
+                    // Cari tahu apakah aplikasi tujuan (seperti Shopee/TikTok/WhatsApp asli) terinstal di HP user
+                    PackageManager packageManager = view.getContext().getPackageManager();
+                    if (intent.resolveActivity(packageManager) != null) {
+                        // Jika aplikasi ada, buka aplikasinya dengan mulus (100% Bebas dari ERR_UNKNOWN_URL_SCHEME)
+                        view.getContext().startActivity(intent);
+                        return true;
+                    } else {
+                        // Jika aplikasi resminya TIDAK ADA di HP user, cari link web cadangan di dalam intent tersebut
+                        String fallbackUrl = intent.getStringExtra("browser_fallback_url");
+                        if (fallbackUrl != null) {
+                            view.loadUrl(fallbackUrl);
+                            return true;
+                        }
+                    }
+                }
+            } catch (URISyntaxException e) {
+                Log.e(TAG, "Format link salah atau tidak didukung: " + e.getMessage());
             }
-            
-            fns.aswm_view(url, false, 0, MainActivity.this);
-            return false;
+
+            // 3. Fallback alternatif terakhir untuk skema deep link non-intent murni (seperti tel:, whatsapp:, dll.)
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                view.getContext().startActivity(intent);
+                return true;
+            } catch (Exception e) {
+                Log.e(TAG, "Aplikasi luar tidak ditemukan untuk tautan: " + url);
+                return true; // Paksa return true agar tidak melempar eror abu-abu Android
+            }
         }
 
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
                 String failingUrl = request.getUrl().toString();
-                
                 if (failingUrl.contains("mbahgadget.co.id")) {
                     view.post(() -> {
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
