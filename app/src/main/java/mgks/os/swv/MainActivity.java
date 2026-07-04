@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS, SHARED-PREFERENCES PERSISTENT STORAGE (100% NO BLANK SCREEN FROM DANA).
+  FIXED: 100% INTERNAL PAYMENTS, SHARED-PREFERENCES PERSISTENT STORAGE, SWIPEREFRESH LAYER CRASH FIX (ANTI-BLANK).
 */
 
 import android.Manifest;
@@ -376,12 +376,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    // ⚡ PERBAIKAN TOTAL: Melibas tuntas bug SwipeRefreshLayout & Refresh Layer Grafis HP
     @Override
     public void onResume() {
         super.onResume();
         if (SWVContext.asw_view != null) {
+            
+            // Matikan paksa cache rendering SwipeRefreshLayout yang sering mengunci layar menjadi putih
+            final SwipeRefreshLayout pullRefresh = findViewById(R.id.pullfresh);
+            if (pullRefresh != null) {
+                pullRefresh.setRefreshing(false);
+                pullRefresh.setEnabled(false);
+                pullRefresh.destroyDrawingCache(); 
+            }
+
             SWVContext.asw_view.onResume();
             SWVContext.asw_view.resumeTimers(); 
+
+            // Alihkan sementara ke software rendering agar CPU membangun ulang grafis perbankan yang hilang
+            SWVContext.asw_view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
             SWVContext.asw_view.setVisibility(View.VISIBLE);
             SWVContext.asw_view.requestFocus();
@@ -418,6 +431,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
                     }
                 } else {
+                    // Kembalikan ke mode hardware akselerasi secara halus setelah rendering software sukses digambar
+                    SWVContext.asw_view.postDelayed(() -> {
+                        if (SWVContext.asw_view != null) {
+                            SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                        }
+                    }, 300);
                     SWVContext.asw_view.loadUrl("javascript:if(document.body){document.body.offsetTop;}");
                 }
             }
