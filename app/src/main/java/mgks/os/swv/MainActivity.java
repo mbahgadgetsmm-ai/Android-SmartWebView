@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS, DANAID EXTERNAL EMBED, SINGLE-TASK WINDOW RESTORATION (NO BLANK ON RESUME).
+  FIXED: 100% INTERNAL PAYMENTS, SHARED-PREFERENCES PERSISTENT STORAGE (100% NO BLANK SCREEN FROM DANA).
 */
 
 import android.Manifest;
@@ -16,6 +16,7 @@ import android.app.SearchManager;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -88,7 +89,7 @@ import mgks.os.swv.plugins.QRScannerPlugin;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = "MainActivity";
     private boolean isFirstLaunchScanCheck = true;
-    private String savedPaymentUrl = null; 
+    private SharedPreferences sharedPrefs; 
 
     static Functions fns = new Functions();
     private FileProcessing fileProcessing;
@@ -102,13 +103,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SWVContext.getPluginManager().onActivityResult(requestCode, resultCode, intent);
     }
 
-    // 💾 SIMPAN STATUS HALAMAN SEBELUM DIHANCURKAN OLEH RAM ANDROID
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.saveState(outState);
-            outState.putString("saved_payment_url", savedPaymentUrl);
         }
     }
 
@@ -141,6 +140,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         final View content = findViewById(android.R.id.content);
         permissionManager = new PermissionManager(this);
+        sharedPrefs = getSharedPreferences("MbahGadgetPrefs", Context.MODE_PRIVATE);
 
         fileUploadLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -201,10 +201,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupLayout();
         initializeWebView();
 
-        // 🧠 PEMULIHAN MEMORI AUTOMATIS: Bangkitkan data yang dihancurkan Android saat ditinggal ke DANA
         if (savedInstanceState != null && SWVContext.asw_view != null) {
             SWVContext.asw_view.restoreState(savedInstanceState);
-            savedPaymentUrl = savedInstanceState.getString("saved_payment_url");
             isFirstLaunchScanCheck = false;
         }
 
@@ -378,7 +376,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    // ⚡ FORCE REDRAW & LAYOUT RECOVERY (Babat habis blank putih)
     @Override
     public void onResume() {
         super.onResume();
@@ -390,7 +387,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.requestFocus();
             SWVContext.asw_view.requestFocusFromTouch();
 
-            // Memaksa Android menggambar ulang grafis layout agar tidak blank putih
             SWVContext.asw_view.invalidate();
             SWVContext.asw_view.requestLayout();
 
@@ -405,11 +401,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
-                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
+                String lastUrl = sharedPrefs.getString("last_payment_url", null);
+                if (lastUrl != null) {
+                    sharedPrefs.edit().remove("last_payment_url").apply(); 
+                    SWVContext.asw_view.loadUrl(lastUrl);
+                } else {
+                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+                }
             } else {
                 if (SWVContext.asw_view.getUrl() == null || SWVContext.asw_view.getUrl().equals("about:blank")) {
-                    if (savedPaymentUrl != null) {
-                        SWVContext.asw_view.loadUrl(savedPaymentUrl);
+                    String lastUrl = sharedPrefs.getString("last_payment_url", null);
+                    if (lastUrl != null) {
+                        sharedPrefs.edit().remove("last_payment_url").apply();
+                        SWVContext.asw_view.loadUrl(lastUrl);
                     } else {
                         SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
                     }
@@ -451,17 +455,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             
             if (url.startsWith("http://") || url.startsWith("https://")) {
                 if (url.contains("checkout") || url.contains("pay") || url.contains("tripay") || url.contains("duitku") || url.contains("xendit") || url.contains("midtrans")) {
-                    savedPaymentUrl = url;
+                    sharedPrefs.edit().putString("last_payment_url", url).apply();
                 }
             }
 
-            // 👑 INTERSEPTOR UTAMA: Deteksi skema danaid:// dll untuk langsung melempar ke aplikasi luar
             if (url.startsWith("whatsapp:") || url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:") || 
                 url.startsWith("dana:") || url.startsWith("danaid:") || url.startsWith("ovo:") || url.startsWith("gopay:") || url.startsWith("shopeepay:")) {
                 try {
                     if (view.getUrl() != null && !view.getUrl().equals("about:blank")) {
-                        savedPaymentUrl = view.getUrl();
+                        sharedPrefs.edit().putString("last_payment_url", view.getUrl()).apply();
                     }
+                    
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
                     view.getContext().startActivity(intent);
@@ -476,7 +480,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             view.getContext().startActivity(marketIntent);
                         }
                     } catch (Exception marketEx) {
-                        Log.e(TAG, "Gagal meluncurkan pasar unduhan: " + marketEx.getMessage());
+                        Log.e(TAG, "Gagal membuka store: " + marketEx.getMessage());
                     }
                     return true; 
                 }
@@ -512,7 +516,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }
             } catch (URISyntaxException e) {
-                Log.e(TAG, "Kesalahan sintaks intent: " + e.getMessage());
+                Log.e(TAG, "Kesalahan intent: " + e.getMessage());
             }
 
             return false;
