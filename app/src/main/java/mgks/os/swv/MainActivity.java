@@ -252,7 +252,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         
-        // ⚡ SUPER CEPAT: AKSELERASI HARDWARE PERANGKAT AKTIF
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         
         webSettings.setSupportZoom(true);          
@@ -265,7 +264,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setAllowUniversalAccessFromFileURLs(true);
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         
-        // 🛡️ ANTI KONEKSI PUTUS (SUDAH DI-FIX TANDA >= KODE OS)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             webSettings.setSafeBrowsingEnabled(false);
         }
@@ -414,14 +412,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             
             if (url.startsWith("https://")) {
-                if (url.contains("tiktok.com")) {
-                    view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
-                } else {
-                    view.getSettings().setUserAgentString(null);
+                // 🚀 FIX TOTAL: Jika tautan mengarah ke LUAR web SMM Anda (seperti TikTok)
+                if (!url.contains("mbahgadget.co.id")) {
+                    if (url.contains("tiktok.com")) {
+                        view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
+                    } else {
+                        view.getSettings().setUserAgentString(null);
+                    }
+                    // Paksa loadUrl murni secara asinkron (Bypass total pengecekan error dari Functions bawaan template)
+                    view.post(() -> view.loadUrl(url));
+                    return true;
                 }
-                
-                view.post(() -> view.loadUrl(url));
-                return true; 
             }
             
             return false;
