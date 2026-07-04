@@ -19,12 +19,12 @@ def getSwvProperties() {
 def swvProps = getSwvProperties()
 
 android {
-	// ➔ NAMESPACE SUDAH DIGANTI: Mengunci ke identitas Mbah Gadget agar bersih dari 'mgks'
-	namespace = 'com.mbah.gadget' 
+	// ➔ CARA 1: Dikembalikan ke mgks agar semua file Java tidak error mencari Resource R
+	namespace = 'mgks.os.swv' 
 	compileSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
 
 	defaultConfig {
-		// ➔ APPLICATION ID SUDAH DIGANTI: Mengunci ke domain aplikasi Anda
+		// ➔ APPLICATION ID TETAP MENGGUNAKAN MILIK MBAH GADGET (Aman, info apk tetap Mbah Gadget)
 		applicationId = 'com.mbah.gadget'
 		minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
 		targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
