@@ -413,11 +413,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             
             if (url.startsWith("https://")) {
-                // 🚀 USER AGENT FAKER AUTOMATION: Jika mendeteksi domain tiktok, paksa WebView menyamar jadi Chrome Android Asli
                 if (url.contains("tiktok.com")) {
                     view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
                 } else {
-                    // Jika kembali ke web Anda, kembalikan ke format default swv.properties
                     view.getSettings().setUserAgentString(null);
                 }
                 
@@ -428,13 +426,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return false;
         }
 
+        // 🛡️ FIX ABSOLUT LAYAR HIJAU: Mencegah trigger halaman offline Mbah Gadget jika error dipicu link luar
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
-                view.post(() -> {
-                    if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) view.loadUrl(SWVContext.ASWV_OFFLINE_URL);
-                    else view.loadUrl("file:///android_asset/error.html");
-                });
+                String failingUrl = request.getUrl().toString();
+                
+                // Layar hijau eror hanya boleh keluar jika mbahgadget.co.id yang benar-benar down
+                if (failingUrl.contains("mbahgadget.co.id")) {
+                    view.post(() -> {
+                        if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
+                            view.loadUrl(SWVContext.ASWV_OFFLINE_URL);
+                        } else {
+                            view.loadUrl("file:///android_asset/error.html");
+                        }
+                    });
+                } else {
+                    // Jika TikTok/web luar mengalami redirect error, abaikan pemicunya agar koneksi tidak putus
+                    Log.d(TAG, "Abaikan pemicu error untuk tautan luar: " + failingUrl);
+                }
             }
             super.onReceivedError(view, request, error);
         }
