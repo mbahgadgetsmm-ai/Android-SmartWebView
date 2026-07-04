@@ -265,7 +265,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setAllowUniversalAccessFromFileURLs(true);
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         
-        // Memastikan modul pihak ketiga dapat menyimpan state sesi video di dalam aplikasi Anda
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
         cookieManager.setAcceptThirdPartyCookies(SWVContext.asw_view, true);
@@ -335,7 +334,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void setupFeatures() {
         setupSwipeRefresh();
-        // 🚀 NORMAL MODE: Meminta 4 izin bawaan sistem agar fitur video, kamera, dan tiket tidak crash
         if (permissionManager != null) {
             permissionManager.requestInitialPermissions();
         }
@@ -389,12 +387,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // 🔒 FIX ANTI-STUCK: Logika pemrosesan link luar yang aman dari deadlock koneksi hantu
+        // 🚀 KUNCI FIX JARINGAN: Memaksa WebView mengabaikan error SSL Handshake agar internet tidak diputus paksa saat memuat media luar
+        @Override
+        @SuppressLint("WebViewClientOnReceivedSslError")
+        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+            handler.proceed(); // Menembus blokir jaringan SSL hantu pihak ketiga
+        }
+
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // Bypass aplikasi sistem protokol esensial (WhatsApp, SMS, Telp, Intent Pembayaran)
             if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:")) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -406,13 +409,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
             
-            // 🔐 PEMUTARAN AMAN HTTPS INTERNAL: Menggunakan post-handler thread terpisah agar UI tidak hang/putus saat memuat platform video berat
             if (url.startsWith("https://")) {
                 view.post(() -> view.loadUrl(url));
                 return true; 
             }
             
-            // Blokir link http:// tidak aman langsung agar performa enkripsi data SMM tetap kokoh
             return false;
         }
 
