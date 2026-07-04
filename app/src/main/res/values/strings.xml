@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">MBAH GADGET</string>
-    <string name="app_desc">SMM Panel Indonesia Terbaik & Terpercaya.</string>
+    <string name="app_desc">SMM Panel Indonesia Terbaik dan Terpercaya.</string>
     
     <string name="image_view">Lihat Gambar</string>
     <string name="loading">Memuat</string>
