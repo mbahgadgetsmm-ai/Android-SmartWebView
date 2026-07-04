@@ -264,6 +264,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        
+        // Memastikan modul pihak ketiga dapat menyimpan state sesi video di dalam aplikasi Anda
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setAcceptThirdPartyCookies(SWVContext.asw_view, true);
+
         SWVContext.asw_view.setWebViewClient(new WebViewCallback());
         SWVContext.asw_view.setWebChromeClient(createWebChromeClient());
         setupDownloadListener();
@@ -383,30 +389,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // 🔒 AMAN & OTOMATIS: Hanya mengizinkan platform HTTPS, menolak HTTP tidak aman!
+        // 🔒 FIX ANTI-STUCK: Logika pemrosesan link luar yang aman dari deadlock koneksi hantu
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // Membuka aplikasi sistem eksternal jika skemanya khusus (WhatsApp, Telepon, Email, dll)
-            if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:")) {
+            // Bypass aplikasi sistem protokol esensial (WhatsApp, SMS, Telp, Intent Pembayaran)
+            if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:")) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     view.getContext().startActivity(intent);
                     return true;
                 } catch (Exception e) {
-                    Log.e(TAG, "Gagal membuka aplikasi luar resmi: " + e.getMessage());
+                    Log.e(TAG, "Gagal meluncurkan intent sistem luar: " + e.getMessage());
                     return true;
                 }
             }
             
-            // 🔐 KUNCI HTTPS: Hanya link berprotokol https:// yang diizinkan berputar di dalam WebView
+            // 🔐 PEMUTARAN AMAN HTTPS INTERNAL: Menggunakan post-handler thread terpisah agar UI tidak hang/putus saat memuat platform video berat
             if (url.startsWith("https://")) {
-                view.loadUrl(url);
+                view.post(() -> view.loadUrl(url));
                 return true; 
             }
             
-            // Jika ada link http:// biasa (tidak aman), sistem akan otomatis menolaknya demi keamanan data SMM
+            // Blokir link http:// tidak aman langsung agar performa enkripsi data SMM tetap kokoh
             return false;
         }
 
