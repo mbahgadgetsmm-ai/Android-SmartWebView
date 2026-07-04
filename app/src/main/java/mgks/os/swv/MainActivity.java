@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS, 4 PERMISSIONS AT STARTUP, HARDWARE ACCELERATION, & AUTO-RECONNECT ENABLED.
+  FIXED: 100% INTERNAL PAYMENTS, NO BLANK WHITE SCREEN ON RESUME, AUTO-RECONNECT & UNIVERSAL INTENT ENABLED.
 */
 
 import android.Manifest;
@@ -358,13 +358,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    // ⚡ PERBAIKAN UTAMA: Manajemen Bangun Siklus Hidup (Anti-Blank Putih)
     @Override
     public void onResume() {
         super.onResume();
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.onResume();
+            SWVContext.asw_view.resumeTimers(); // Membangunkan kembali pengolah JavaScript internal
+
+            // Paksa komponen WebView agar seketika terlihat di layar
+            SWVContext.asw_view.setVisibility(View.VISIBLE);
+
+            final View welcomeScreen = findViewById(R.id.msw_welcome);
+            if (welcomeScreen != null) {
+                welcomeScreen.setVisibility(View.GONE);
+            }
             
-            // 🛡️ MODIFIKASI: Selalu todong 4 izin dasar di startup demi kelancaran fitur upload/kamera
             if (permissionManager != null) {
                 permissionManager.requestInitialPermissions();
             }
@@ -373,9 +382,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
             } else {
-                final View welcomeScreen = findViewById(R.id.msw_welcome);
-                if (welcomeScreen != null) welcomeScreen.setVisibility(View.GONE);
-                SWVContext.asw_view.setVisibility(View.VISIBLE);
+                // Jika kembali dari background dan terdeteksi blank kosong, muat ulang URL Toko Utama Anda
+                if (SWVContext.asw_view.getUrl() == null || SWVContext.asw_view.getUrl().equals("about:blank")) {
+                    SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
+                }
             }
         }
     }
@@ -383,7 +393,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onPause() {
         super.onPause();
-        if (SWVContext.asw_view != null) SWVContext.asw_view.onPause();
+        if (SWVContext.asw_view != null) {
+            SWVContext.asw_view.onPause();
+            SWVContext.asw_view.pauseTimers(); // Membekukan sementara aktivitas skrip saat di background
+        }
     }
 
     private class WebViewCallback extends WebViewClient {
@@ -403,11 +416,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             handler.proceed(); 
         }
 
-        // 🌐 LOGIKA NAVIGASI UNIVERSAL SEPERTI GOOGLE CHROME
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
+            if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:")) {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    view.getContext().startActivity(intent);
+                    return true;
+                } catch (Exception e) {
+                    Log.e(TAG, "Gagal meluncurkan intent luar: " + e.getMessage());
+                    return true;
+                }
+            }
+
             // 1. Amankan skema tautan web standar HTTP/HTTPS internal & eksternal
             if (url.startsWith("http://") || url.startsWith("https://")) {
                 if (url.contains("tiktok.com") || url.contains("facebook.com") || url.contains("instagram.com") || 
@@ -440,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Log.e(TAG, "Format link salah atau tidak didukung: " + e.getMessage());
             }
 
-            // 3. Fallback sistem komunikasi esensial (tel:, whatsapp:, sms:, dll.)
+            // 3. Fallback sistem komunikasi alternatif terakhir
             try {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 view.getContext().startActivity(intent);
@@ -451,7 +474,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
-        // 🛠️ MODIFIKASI: Fitur Auto-Reconnect Instan saat HP kembali Online
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
