@@ -383,11 +383,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // 🔒 ALL INTERNAL PAYMENTS: Semua link pembayaran ditahan di dalam APK
+        // 🔒 AMAN & OTOMATIS: Hanya mengizinkan platform HTTPS, menolak HTTP tidak aman!
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
+            // Membuka aplikasi sistem eksternal jika skemanya khusus (WhatsApp, Telepon, Email, dll)
             if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:")) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -399,8 +400,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
             
-            view.loadUrl(url);
-            return true;
+            // 🔐 KUNCI HTTPS: Hanya link berprotokol https:// yang diizinkan berputar di dalam WebView
+            if (url.startsWith("https://")) {
+                view.loadUrl(url);
+                return true; 
+            }
+            
+            // Jika ada link http:// biasa (tidak aman), sistem akan otomatis menolaknya demi keamanan data SMM
+            return false;
         }
 
         @Override
