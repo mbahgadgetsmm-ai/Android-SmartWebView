@@ -265,6 +265,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setAllowUniversalAccessFromFileURLs(true);
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         
+        // 🛡️ ANTI KONEKSI PUTUS (SUDAH DI-FIX TANDA >= KODE OS)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             webSettings.setSafeBrowsingEnabled(false);
         }
@@ -426,13 +427,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return false;
         }
 
-        // 🛡️ FIX ABSOLUT LAYAR HIJAU: Mencegah trigger halaman offline Mbah Gadget jika error dipicu link luar
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
                 String failingUrl = request.getUrl().toString();
                 
-                // Layar hijau eror hanya boleh keluar jika mbahgadget.co.id yang benar-benar down
                 if (failingUrl.contains("mbahgadget.co.id")) {
                     view.post(() -> {
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
@@ -442,7 +441,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                     });
                 } else {
-                    // Jika TikTok/web luar mengalami redirect error, abaikan pemicunya agar koneksi tidak putus
                     Log.d(TAG, "Abaikan pemicu error untuk tautan luar: " + failingUrl);
                 }
             }
