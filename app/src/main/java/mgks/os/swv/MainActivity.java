@@ -412,20 +412,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             
             if (url.startsWith("https://")) {
-                // 🚀 FIX TOTAL: Jika tautan mengarah ke LUAR web SMM Anda (seperti TikTok)
+                // 🛡️ STRUKTUR YANG BENAR: Bypass murni link luar agar lolos compile dan kebal layar hijau
                 if (!url.contains("mbahgadget.co.id")) {
                     if (url.contains("tiktok.com")) {
                         view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
                     } else {
                         view.getSettings().setUserAgentString(null);
                     }
-                    // Paksa loadUrl murni secara asinkron (Bypass total pengecekan error dari Functions bawaan template)
                     view.post(() -> view.loadUrl(url));
                     return true;
                 }
             }
             
-            return false;
+            return super.shouldOverrideUrlLoading(view, request);
         }
 
         @Override
