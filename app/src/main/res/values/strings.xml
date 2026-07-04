@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">MBAH GADGET</string>
-    <string name="app_desc">Toko Aksesoris Gadget Online Terlengkap dan Terpercaya.</string>
+    <string name="app_desc">SMM Panel Indonesia Terbaik & Terpercaya.</string>
     
     <string name="image_view">Lihat Gambar</string>
     <string name="loading">Memuat</string>
     <string name="loading2" tools:ignore="TypographyEllipsis">Memuat...</string>
-    <string name="mgks_promo">mbahgadget.co.id</string>
+    <string name="mbah_promo">mbahgadget.co.id</string>
     <string name="loc_fail">Gagal Menemukan Lokasi</string>
     <string name="loc_fail_text">Silakan Periksa GPS Anda.</string>
     <string name="loc_fail_more">Pastikan GPS Anda aktif and dalam mode akurasi tinggi.</string>
