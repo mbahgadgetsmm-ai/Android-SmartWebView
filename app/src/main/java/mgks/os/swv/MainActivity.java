@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS, PAYDISINI INTEGRATION, CHROMIUM HARD-REFRESH RENDER GUARD (NO MANUALLY BACK NEEDED).
+  FIXED: 100% PAYDISINI REDIRECT, ANTI-BLANK WHITE ON BACK FROM DANA, CHROMIUM WEBVIEW AUTO-RECOVERY.
 */
 
 import android.Manifest;
@@ -391,7 +391,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    // 👑 JALUR AMAN: Menyentak paksa siklus render grafis Chromium (Babat Habis Layar Putih)
     @Override
     public void onResume() {
         super.onResume();
@@ -410,7 +409,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.requestFocus();
             SWVContext.asw_view.requestFocusFromTouch();
 
-            // Siasat Jitu: Paksa matikan hardware acceleration sebentar saat resume untuk membersihkan cache putih hantu
+            // Siasat Jitu: Matikan hardware acceleration untuk membuang frame putih hantu yang membeku
             SWVContext.asw_view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
             final View welcomeScreen = findViewById(R.id.msw_welcome);
@@ -441,20 +440,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL);
                     }
                 } else {
-                    // JURUS PAMUNGKAS: Lakukan penyegaran paksa layer internal WebView
+                    // Paksa memicu ulang invalidasi gambar tanpa merusak state halaman aktif
                     SWVContext.asw_view.clearFocus();
                     SWVContext.asw_view.requestFocus();
                 }
             }
 
-            // Bangunkan kembali akselerasi grafis GPU 150 milidetik kemudian agar halaman rendering normal otomatis
+            // Kembalikan ke GPU rendering setelah 250 milidetik agar halaman Paydisini langsung tergambar sempurna
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (SWVContext.asw_view != null) {
                     SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
                     SWVContext.asw_view.invalidate();
                     SWVContext.asw_view.requestLayout();
                 }
-            }, 150);
+            }, 250);
         }
     }
 
@@ -487,12 +486,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
+            // Simpan setiap pergerakan halaman invoice ke memori fisik HP
             if (url.startsWith("http://") || url.startsWith("https://")) {
                 if (url.contains("checkout") || url.contains("pay") || url.contains("tripay") || url.contains("duitku") || url.contains("xendit") || url.contains("midtrans")) {
                     sharedPrefs.edit().putString("last_payment_url", url).apply();
                 }
             }
 
+            // 👑 INTERSEPTOR KHUSUS DEEP-LINKING DOMPET DIGITAL (Hadang ERR_UNKNOWN_URL_SCHEME)
             if (url.startsWith("whatsapp:") || url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:") || 
                 url.startsWith("dana:") || url.startsWith("danaid:") || url.startsWith("ovo:") || url.startsWith("gopay:") || url.startsWith("shopeepay:")) {
                 try {
@@ -520,15 +521,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
 
+            // 🔥 PERBAIKAN UTAMA: Biarkan WebView memproses pengalihan internal (redirect) web perbankan/Paydisini secara alami 
+            // Jangan paksa memanggil view.loadUrl(url) secara manual di sini untuk menghindari frame macet / blank putih hantu.
             if (url.startsWith("http://") || url.startsWith("https://")) {
                 if (url.contains("tiktok.com") || url.contains("facebook.com") || url.contains("instagram.com") || 
                     url.contains("shopee") || url.contains("x.com") || url.contains("youtube.com") || url.contains("snackvideo")) {
                     view.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
+                    view.post(() -> view.loadUrl(url));
+                    return true;
                 } else {
                     view.getSettings().setUserAgentString(null);
+                    return false; // Return false membiarkan WebView mengolah rantai redirect otomatis dari Paydisini dengan mulus
                 }
-                view.post(() -> view.loadUrl(url));
-                return true;
             }
 
             try {
