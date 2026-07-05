@@ -1,11 +1,11 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD
-  VERSION: UNIVERSAL AUTO REFRESH
-  ✅ HANYA CEK 1 DOMAIN! (mbahgadget.co.id)
-  ✅ Semua selain itu = APLIKASI LUAR → AUTO REFRESH!
-  ✅ Login AMAN! Tidak kena refresh!
+  Smart WebView v8 - MBAH GADGET (FINAL FIX)
+  ✅ AUTO REFRESH UNIVERSAL (hanya domain mbahgadget.co.id)
+  ✅ FLAG_KEEP_SCREEN_ON DIHAPUS (layar bisa mati normal)
+  ✅ DEBUG = false
+  ✅ SSL = ON
 */
 
 import android.annotation.SuppressLint;
@@ -15,7 +15,7 @@ import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap; // ⭐ INI YANG KURANG!
+import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private boolean isFirstLaunchScanCheck = true;
     private boolean isNetworkAvailable = true;
     
-    // ✅ Flag untuk deteksi kembali dari aplikasi luar
     private boolean isReturningFromExternalApp = false;
 
     static Functions fns = new Functions();
@@ -93,9 +92,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @SuppressLint({"SetJavaScriptEnabled", "WrongViewCast", "JavascriptInterface"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // 🔒 ANTI-SCREENSHOT
         if (SWVContext.ASWP_BLOCK_SCREENSHOTS) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
+        
+        // ✅ FLAG_KEEP_SCREEN_ON DIHAPUS! (Biar layar bisa mati normal)
+        // getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); // ❌ HAPUS!
         
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -418,51 +421,46 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         moveTaskToBack(true);
     }
 
-    // ==================== ✅ UNIVERSAL: CEK APLIKASI LUAR ====================
+    // ==================== UNIVERSAL CEK APLIKASI LUAR ====================
 
     private boolean isExternalAppUrl(String url) {
         if (url == null || url.isEmpty()) return false;
         
         // ✅ UNIVERSAL: HANYA CEK 1 DOMAIN!
-        // Jika BUKAN mbahgadget.co.id = APLIKASI LUAR!
         boolean isMbahGadget = url.contains("mbahgadget.co.id");
         boolean isInternalFile = url.startsWith("file://");
         boolean isBlank = url.equals("about:blank");
         
-        // ❌ JANGAN REFRESH jika internal
-        // ✅ REFRESH jika external
         return !isMbahGadget && !isInternalFile && !isBlank;
     }
 
-    // ==================== ON RESUME ====================
+    // ==================== ON RESUME (FIX KEEP_SCREEN_ON) ====================
 
     @Override
     public void onResume() {
         super.onResume();
         
+        // ✅ FIX: Biarkan layar mati normal (termasuk saat di-charge)
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.onResume();
             checkNetworkAvailability();
             
-            // ✅ KEMBALI DARI APLIKASI LUAR?
             if (isReturningFromExternalApp) {
                 isReturningFromExternalApp = false;
                 
                 String currentUrl = SWVContext.asw_view.getUrl();
                 
-                // ✅ UNIVERSAL DETECTION!
                 if (isExternalAppUrl(currentUrl)) {
-                    // 🔄 REFRESH! (Kembali dari aplikasi luar)
                     new Handler(Looper.getMainLooper()).postDelayed(() -> {
                         if (SWVContext.asw_view != null) {
                             SWVContext.asw_view.reload();
-                            if (DEBUG) Log.d(TAG, "🔄 Auto Refresh - Kembali dari aplikasi luar: " + currentUrl);
+                            if (DEBUG) Log.d(TAG, "🔄 Auto Refresh - Kembali dari aplikasi luar");
                         }
                     }, 300);
                 } else {
-                    // ❌ JANGAN REFRESH! (Internal)
-                    if (DEBUG) Log.d(TAG, "⛔ Skip refresh - Internal: " + currentUrl);
-                    
+                    if (DEBUG) Log.d(TAG, "⛔ Skip refresh - Internal");
                     if (SWVContext.asw_view.getVisibility() != View.VISIBLE) {
                         SWVContext.asw_view.setVisibility(View.VISIBLE);
                     }
@@ -495,8 +493,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.onPause();
-            
-            // ✅ Tandai bahwa aplikasi keluar (ke background)
             isReturningFromExternalApp = true;
             if (DEBUG) Log.d(TAG, "📤 Keluar dari APK");
         }
@@ -592,7 +588,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             
             if (DEBUG) Log.d(TAG, "Override URL: " + url);
             
-            // 1. Tangani Skema Pembayaran Khusus (dana://, shopeeid://, gojek://)
+            // 1. Skema Pembayaran Khusus
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 try {
                     Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
@@ -613,7 +609,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
 
-            // 2. PAYDISINI & TRIPAY (proses di dalam WebView)
+            // 2. Payment Gateway
             if (url.contains("paydisini.co.id") || url.contains("tripay.co.id")) {
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
                 if (welcomeScreen != null) welcomeScreen.setVisibility(View.GONE);
@@ -621,7 +617,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return true;
             }
 
-            // 3. UNIVERSAL: Domain Luar (buka di browser/aplikasi eksternal)
+            // 3. Domain Luar (buka di browser/aplikasi eksternal)
             if (!url.contains("mbahgadget.co.id") && !url.startsWith("file://")) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
