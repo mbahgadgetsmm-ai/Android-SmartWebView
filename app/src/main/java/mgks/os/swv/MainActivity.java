@@ -11,8 +11,9 @@ package mgks.os.swv;
   3. Back Button Logic (lebih aman)
   4. Network Error Handling (offline page)
   5. SSL Error Handling (tidak bypass di production)
-  6. Progress Bar
-  7. Hardcoded strings ke resources
+  6. Hardcoded strings ke resources
+  7. FIX: Hapus setAppCacheEnabled & setAppCachePath (deprecated)
+  8. FIX: Hapus progressBar (gunakan default)
 */
 
 import android.Manifest;
@@ -65,7 +66,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -104,7 +104,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     
     private boolean isFirstLaunchScanCheck = true;
     private boolean isNetworkAvailable = true;
-    private ProgressBar progressBar;
 
     static Functions fns = new Functions();
     private FileProcessing fileProcessing;
@@ -240,7 +239,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (SWVContext.ASWV_LAYOUT == 1) {
             setContentView(R.layout.drawer_main);
             MaterialToolbar toolbar = findViewById(R.id.toolbar);
-            progressBar = findViewById(R.id.progressBar);
             
             if (SWVContext.ASWP_DRAWER_HEADER) {
                 findViewById(R.id.app_bar).setVisibility(View.VISIBLE);
@@ -257,7 +255,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             navigationView.setNavigationItemSelectedListener(this);
         } else {
             setContentView(R.layout.activity_main);
-            progressBar = findViewById(R.id.progressBar);
         }
         SWVContext.asw_view = findViewById(R.id.msw_view);
         if (SWVContext.asw_view != null) {
@@ -281,10 +278,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         webSettings.setSupportMultipleWindows(true);
         
-        // ✅ Cache & Database
+        // ✅ Cache & Database (FIX: Hapus setAppCacheEnabled & setAppCachePath)
         webSettings.setDatabaseEnabled(true);
-        webSettings.setAppCacheEnabled(true);
-        webSettings.setAppCachePath(getCacheDir().getAbsolutePath());
+        // AppCache sudah deprecated di Android 9+, gunakan cache bawaan
         try {
             webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         } catch (Exception e) {
@@ -401,16 +397,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onProgressChanged(WebView view, int progress) {
-                // ✅ Show progress bar
-                if (progressBar != null) {
-                    if (progress < 100) {
-                        progressBar.setVisibility(View.VISIBLE);
-                        progressBar.setProgress(progress);
-                    } else {
-                        progressBar.setVisibility(View.GONE);
-                    }
-                }
-                
                 // Hide welcome screen when page is loading
                 if (progress > 35) {
                     final View welcomeScreen = findViewById(R.id.msw_welcome);
