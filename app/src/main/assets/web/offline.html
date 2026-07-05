@@ -5,71 +5,279 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Offline - MBAH GADGET</title>
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background:#ffffff;
-            min-height:100vh;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            padding:20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
         .container {
-            max-width:400px; width:100%; text-align:center; padding:20px;
-            animation:fadeIn 0.5s ease;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+            animation: fadeIn 0.5s ease;
         }
         @keyframes fadeIn {
-            from { opacity:0; transform:translateY(20px); }
-            to { opacity:1; transform:translateY(0); }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .logo { font-size:64px; margin-bottom:8px; }
-        .brand { color:#00c853; font-size:28px; font-weight:800; margin-bottom:4px; }
-        .subtitle { color:#999; font-size:13px; margin-bottom:30px; }
-        .offline-icon { font-size:72px; margin-bottom:16px; }
-        .title { color:#333; font-size:20px; font-weight:700; margin-bottom:8px; }
-        .desc { color:#666; font-size:15px; line-height:1.6; margin-bottom:6px; }
-        .desc-small { color:#999; font-size:13px; line-height:1.5; margin-bottom:28px; }
+        .logo {
+            font-size: 64px;
+            margin-bottom: 8px;
+        }
+        .brand {
+            color: #00c853;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            color: #999;
+            font-size: 13px;
+            margin-bottom: 30px;
+        }
+        .offline-icon {
+            font-size: 72px;
+            margin-bottom: 16px;
+        }
+        .title {
+            color: #333;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .desc {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+        .desc-small {
+            color: #999;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 28px;
+        }
         .btn-reload {
-            display:inline-block; background:#00c853; color:white; padding:14px 40px;
-            text-decoration:none; font-weight:600; border-radius:50px; font-size:16px;
-            transition:all 0.3s ease; box-shadow:0 4px 15px rgba(0,200,83,0.3);
+            display: inline-block;
+            background: #00c853;
+            color: white;
+            padding: 14px 40px;
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 50px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+            cursor: pointer;
+            border: none;
         }
-        .btn-reload:hover { background:#00b84c; transform:scale(1.02); }
-        .btn-reload svg { width:18px; height:18px; fill:white; vertical-align:middle; margin-right:8px; }
-        .hint { margin-top:20px; color:#aaa; font-size:12px; }
+        .btn-reload:hover {
+            background: #00b84c;
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 200, 83, 0.4);
+        }
+        .btn-reload:active {
+            transform: scale(0.98);
+        }
+        .btn-reload svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .btn-reload:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .hint {
+            margin-top: 20px;
+            color: #aaa;
+            font-size: 12px;
+        }
         .status-dot {
-            display:inline-block; width:8px; height:8px; background:#ff4444;
-            border-radius:50%; animation:pulse 1.5s infinite; margin-right:6px; vertical-align:middle;
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #ff4444;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        .status-dot.online {
+            background: #00c853;
         }
         @keyframes pulse {
-            0%,100% { opacity:1; transform:scale(1); }
-            50% { opacity:0.5; transform:scale(0.8); }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
         }
         .btn-home-offline {
-            display:inline-block; color:#999; text-decoration:none; font-size:13px;
-            margin-top:12px; transition:color 0.3s ease;
+            display: inline-block;
+            color: #999;
+            text-decoration: none;
+            font-size: 13px;
+            margin-top: 12px;
+            transition: color 0.3s ease;
         }
-        .btn-home-offline:hover { color:#00c853; }
+        .btn-home-offline:hover {
+            color: #00c853;
+        }
+        .hidden {
+            display: none !important;
+        }
+        #statusText {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #666;
+        }
+        #statusText.success {
+            color: #00c853;
+        }
+        #statusText.error {
+            color: #ff4444;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="mainContainer">
         <div class="logo">📱</div>
         <div class="brand">MBAH GADGET</div>
         <p class="subtitle">SMM Panel Indonesia</p>
+        
         <div class="offline-icon">📡</div>
-        <h1 class="title">Koneksi Terputus</h1>
-        <p class="desc">Anda sedang offline.</p>
-        <p class="desc-small">Periksa kembali koneksi internet Anda,<br>pastikan WiFi atau data seluler aktif.</p>
-        <a href="javascript:window.location.reload(true)" class="btn-reload">
+        <h1 class="title" id="statusTitle">Koneksi Terputus</h1>
+        <p class="desc" id="statusDesc">Anda sedang offline.</p>
+        <p class="desc-small" id="statusDescSmall">Periksa kembali koneksi internet Anda,<br>pastikan WiFi atau data seluler aktif.</p>
+        
+        <button onclick="checkAndReload()" class="btn-reload" id="reloadBtn">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path d="M17.65,6.35C16.2,4.9,14.21,4,12,4A8,8,0,0,0,4,12a8,8,0,0,0,8,8c3.73,0,6.84-2.55,7.73-6h-2.08c-.82,2.33-3.04,4-5.65,4-3.31,0-6-2.69-6-6s2.69-6,6-6c1.66,0,3.14.69,4.22,1.78L13,11h7V4l-2.35,2.35z"/>
             </svg>
             Coba Lagi
-        </a>
-        <p class="hint"><span class="status-dot"></span>Menunggu koneksi...</p>
-        <a href="https://mbahgadget.co.id" class="btn-home-offline">← Kembali ke Beranda</a>
+        </button>
+        
+        <p class="hint">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusLabel">Menunggu koneksi...</span>
+        </p>
+
+        <a href="javascript:void(0)" onclick="goHome()" class="btn-home-offline">← Kembali ke Beranda</a>
     </div>
+
+    <script>
+        // ============================================
+        // ✅ CEK INTERNET SEBELUM REFRESH
+        // ============================================
+        
+        var checkCount = 0;
+        var maxCheck = 5;
+        
+        function checkAndReload() {
+            var btn = document.getElementById('reloadBtn');
+            var statusTitle = document.getElementById('statusTitle');
+            var statusDesc = document.getElementById('statusDesc');
+            var statusDescSmall = document.getElementById('statusDescSmall');
+            var statusDot = document.getElementById('statusDot');
+            var statusLabel = document.getElementById('statusLabel');
+            
+            // Disable button
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Memeriksa...';
+            
+            // Cek koneksi
+            checkConnection(function(isOnline) {
+                if (isOnline) {
+                    // ✅ ONLINE! Refresh halaman
+                    statusTitle.textContent = 'Koneksi Kembali!';
+                    statusDesc.textContent = 'Sedang memuat ulang...';
+                    statusDescSmall.textContent = 'Mohon tunggu sebentar.';
+                    statusDot.className = 'status-dot online';
+                    statusLabel.textContent = 'Online! Memuat ulang...';
+                    statusLabel.style.color = '#00c853';
+                    
+                    setTimeout(function() {
+                        window.location.reload(true);
+                    }, 500);
+                } else {
+                    // ❌ Masih OFFLINE
+                    btn.disabled = false;
+                    btn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:18px;height:18px;fill:white;vertical-align:middle;margin-right:8px;">
+                            <path d="M17.65,6.35C16.2,4.9,14.21,4,12,4A8,8,0,0,0,4,12a8,8,0,0,0,8,8c3.73,0,6.84-2.55,7.73-6h-2.08c-.82,2.33-3.04,4-5.65,4-3.31,0-6-2.69-6-6s2.69-6,6-6c1.66,0,3.14.69,4.22,1.78L13,11h7V4l-2.35,2.35z"/>
+                        </svg>
+                        Coba Lagi
+                    `;
+                    statusTitle.textContent = 'Masih Offline';
+                    statusDesc.textContent = 'Koneksi internet belum tersedia.';
+                    statusDescSmall.textContent = 'Cek WiFi atau data seluler Anda.';
+                    statusDot.className = 'status-dot';
+                    statusLabel.textContent = 'Masih offline...';
+                    statusLabel.style.color = '#aaa';
+                    
+                    // Auto retry after 10 seconds
+                    if (checkCount < maxCheck) {
+                        checkCount++;
+                        setTimeout(function() {
+                            if (!btn.disabled) {
+                                checkAndReload();
+                            }
+                        }, 10000);
+                    }
+                }
+            });
+        }
+        
+        function checkConnection(callback) {
+            // Coba fetch ke server
+            fetch('https://mbahgadget.co.id/', {
+                method: 'HEAD',
+                mode: 'no-cors',
+                cache: 'no-store'
+            })
+            .then(function(response) {
+                callback(true);
+            })
+            .catch(function(error) {
+                callback(false);
+            });
+            
+            // Timeout kalau terlalu lama
+            setTimeout(function() {
+                callback(false);
+            }, 5000);
+        }
+        
+        function goHome() {
+            window.location.href = 'https://mbahgadget.co.id';
+        }
+        
+        // ✅ Auto check saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                checkAndReload();
+            }, 2000);
+        });
+        
+        // ✅ Cek koneksi setiap 15 detik (otomatis)
+        setInterval(function() {
+            var btn = document.getElementById('reloadBtn');
+            if (!btn.disabled) {
+                checkAndReload();
+            }
+        }, 15000);
+    </script>
 </body>
 </html>
