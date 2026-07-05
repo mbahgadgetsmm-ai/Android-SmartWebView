@@ -2,7 +2,7 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS, 4 PERMISSIONS AT STARTUP (NORMAL & STABLE), HARDWARE ACCELERATION ENABLED.
+  FIXED: 100% INTERNAL PAYMENTS + AUTOMATIC DEEP-LINK DETECTOR FOR EXTERNAL APPS (DANA, WHATSAPP, ETC)
 */
 
 import android.Manifest;
@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void handleOnBackPressed() {
                 if (SWVContext.asw_view != null) {
                     String currentUrl = SWVContext.asw_view.getUrl();
-                    if (currentUrl == null || currentUrl.equals(SWVContext.ASWV_URL) || currentUrl.equals(SWVContext.ASWV_URL + "/")) {
+                    if (currentUrl == null || currentUrl.contains("mbahgadget.co.id")) {
                         moveTaskToBack(true); 
                     } else {
                         if (SWVContext.asw_view.canGoBack()) {
@@ -252,7 +252,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         
-        // ⚡ SUPER CEPAT: AKSELERASI HARDWARE PERANGKAT AKTIF
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         
         webSettings.setSupportZoom(true);          
@@ -329,7 +328,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void setupFeatures() {
         setupSwipeRefresh();
-        // 🚀 NORMAL MODE: Meminta 4 izin bawaan sistem agar fitur video, kamera, dan tiket tidak crash
         if (permissionManager != null) {
             permissionManager.requestInitialPermissions();
         }
@@ -357,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.onResume();
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
-                SWVContext.asw_view.loadUrl(SWVContext.ASWV_URL); 
+                SWVContext.asw_view.loadUrl("https://mbahgadget.co.id"); 
             } else {
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
                 if (welcomeScreen != null) welcomeScreen.setVisibility(View.GONE);
@@ -383,19 +381,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // 🔒 ALL INTERNAL PAYMENTS: Semua link pembayaran ditahan di dalam APK
+        // ⚡ CANGGIH: MEDETEKSI DAN OTOMATIS MEMBUKA APLIKASI LUAR (DEEP LINKING)
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            if (url.startsWith("whatsapp:") || url.startsWith("intent:") || url.startsWith("tel:") || url.startsWith("mailto:")) {
+            // Cek jika link bukan http/https normal (misal whatsapp:, intent:, dana:, shopeepay:, gopay:)
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                try {
+                    Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                    if (intent != null) {
+                        view.getContext().startActivity(intent);
+                        return true;
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Gagal membuka intent otomatis: " + e.getMessage());
+                }
+            }
+
+            // Proteksi khusus jika link e-wallet/payment gateway dilempar via https tapi mengarah ke aplikasi luar
+            if (url.contains("dana.id/d/app") || url.contains("pembayaran") || url.contains("whatsapp.com")) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     view.getContext().startActivity(intent);
                     return true;
                 } catch (Exception e) {
-                    Log.e(TAG, "Gagal membuka aplikasi luar resmi: " + e.getMessage());
-                    return true;
+                    Log.e(TAG, "Gagal deep-link manual: " + e.getMessage());
                 }
             }
             
@@ -415,7 +426,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private void handleIncomingIntents() { fns.aswm_view(SWVContext.ASWV_URL, false, 0, this); }
+    private void handleIncomingIntents() { fns.aswm_view("https://mbahgadget.co.id", false, 0, this); }
 
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
