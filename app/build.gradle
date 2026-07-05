@@ -1,5 +1,5 @@
 /*
-  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD (FIXED & SECURE)
+  Smart WebView v8 - MBAH GADGET (FIXED & SECURE)
   ✅ minifyEnabled = true (Keamanan + Ukuran APK kecil)
   ✅ shrinkResources = true (Hapus resource tidak terpakai)
   ✅ Version Code & Name terbaru
@@ -30,7 +30,6 @@ android {
         minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
         targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
         
-        // 🚀 VERSI TERBARU:
         versionCode = swvProps.getProperty('build.version.code', '20').toInteger()
         versionName = swvProps.getProperty('build.version.name', '8.2.0')
         
@@ -39,7 +38,7 @@ android {
 
     buildTypes {
         release {
-            // ✅ KEAMANAN: Aktifkan minify & shrink!
+            // ✅ KEAMANAN AKTIF!
             minifyEnabled = true
             shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -68,18 +67,19 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.multidex:multidex:2.0.1'
 
-    // Firebase Core & Sinyal
+    // Firebase
     implementation 'com.google.firebase:firebase-auth:24.1.0'
     implementation 'com.google.firebase:firebase-config:23.1.0'
     implementation 'com.google.firebase:firebase-messaging:25.0.2'
     implementation 'com.google.firebase:firebase-analytics:23.2.0'
 
+    // Google Play Services
     implementation 'com.google.android.gms:play-services-auth:21.6.0'
     implementation 'com.google.android.gms:play-services-ads:24.9.0'
     implementation 'com.google.android.gms:play-services-location:21.3.0'
 
+    // Material & AndroidX
     implementation 'com.google.android.material:material:1.14.0'
-
     implementation 'androidx.core:core-splashscreen:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
@@ -87,10 +87,10 @@ dependencies {
     implementation 'androidx.browser:browser:1.10.0'
     implementation 'androidx.work:work-runtime:2.11.2'
 
-    // SDK UTAMA ONESIGNAL
+    // OneSignal
     implementation 'com.onesignal:OneSignal:[4.0.0, 4.99.99]'
 
-    // Plugins Tambahan
+    // Plugins
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
     implementation 'androidx.biometric:biometric:1.1.0'
 }
