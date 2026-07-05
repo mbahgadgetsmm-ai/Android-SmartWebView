@@ -1,92 +1,102 @@
 /*
-  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD (FIXED VERSION)
+  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD (FIXED & SECURE)
+  ✅ minifyEnabled = true (Keamanan + Ukuran APK kecil)
+  ✅ shrinkResources = true (Hapus resource tidak terpakai)
+  ✅ Version Code & Name terbaru
 */
 
 plugins {
-	id 'com.android.application'
+    id 'com.android.application'
 }
 
 def getSwvProperties() {
-	def properties = new Properties()
-	def propertiesFile = file('src/main/assets/swv.properties')
-	if (propertiesFile.exists()) {
-		properties.load(propertiesFile.newDataInputStream())
-	} else {
-		throw new GradleException("swv.properties file not found in app/src/main/assets/")
-	}
-	return properties
+    def properties = new Properties()
+    def propertiesFile = file('src/main/assets/swv.properties')
+    if (propertiesFile.exists()) {
+        properties.load(propertiesFile.newDataInputStream())
+    } else {
+        throw new GradleException("swv.properties file not found in app/src/main/assets/")
+    }
+    return properties
 }
 def swvProps = getSwvProperties()
 
 android {
-	namespace = 'mgks.os.swv'
-	compileSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
+    namespace = 'mgks.os.swv'
+    compileSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
 
-	defaultConfig {
-		applicationId = swvProps.getProperty('build.application.id', 'com.mbah.gadget')
-		minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
-		targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
-		
-		// 🚀 SEKARANG OTOMATIS MEMBACA DARI FILE swv.properties:
-		versionCode = swvProps.getProperty('build.version.code', '19').toInteger()
-		versionName = swvProps.getProperty('build.version.name', '8.1.3')
-		
-		multiDexEnabled = true
-	}
+    defaultConfig {
+        applicationId = swvProps.getProperty('build.application.id', 'com.mbah.gadget')
+        minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
+        targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
+        
+        // 🚀 VERSI TERBARU:
+        versionCode = swvProps.getProperty('build.version.code', '20').toInteger()
+        versionName = swvProps.getProperty('build.version.name', '8.2.0')
+        
+        multiDexEnabled = true
+    }
 
-	buildTypes {
-		release {
-			minifyEnabled = false
-			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-		}
-	}
+    buildTypes {
+        release {
+            // ✅ KEAMANAN: Aktifkan minify & shrink!
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled = false
+            shrinkResources = false
+            debuggable = true
+        }
+    }
 
-	buildFeatures {
-		buildConfig = true
-	}
+    buildFeatures {
+        buildConfig = true
+    }
 
-	compileOptions {
-		sourceCompatibility = JavaVersion.VERSION_17
-		targetCompatibility = JavaVersion.VERSION_17
-	}
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 }
 
 dependencies {
-	testImplementation 'junit:junit:4.13.2'
-	androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
 
-	implementation fileTree(include: ['*.jar'], dir: 'libs')
-	implementation 'androidx.multidex:multidex:2.0.1'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.multidex:multidex:2.0.1'
 
-	// Firebase Core & Sinyal
-	implementation 'com.google.firebase:firebase-auth:24.1.0'
-	implementation 'com.google.firebase:firebase-config:23.1.0'
-	implementation 'com.google.firebase:firebase-messaging:25.0.2'
-	implementation 'com.google.firebase:firebase-analytics:23.2.0'
+    // Firebase Core & Sinyal
+    implementation 'com.google.firebase:firebase-auth:24.1.0'
+    implementation 'com.google.firebase:firebase-config:23.1.0'
+    implementation 'com.google.firebase:firebase-messaging:25.0.2'
+    implementation 'com.google.firebase:firebase-analytics:23.2.0'
 
-	implementation 'com.google.android.gms:play-services-auth:21.6.0'
-	implementation 'com.google.android.gms:play-services-ads:24.9.0'
-	implementation 'com.google.android.gms:play-services-location:21.3.0'
+    implementation 'com.google.android.gms:play-services-auth:21.6.0'
+    implementation 'com.google.android.gms:play-services-ads:24.9.0'
+    implementation 'com.google.android.gms:play-services-location:21.3.0'
 
-	implementation 'com.google.android.material:material:1.14.0'
+    implementation 'com.google.android.material:material:1.14.0'
 
-	implementation 'androidx.core:core-splashscreen:1.2.0'
-	implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
-	implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
-	implementation 'androidx.appcompat:appcompat:1.7.1'
-	implementation 'androidx.browser:browser:1.10.0'
-	implementation 'androidx.work:work-runtime:2.11.2'
+    implementation 'androidx.core:core-splashscreen:1.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.browser:browser:1.10.0'
+    implementation 'androidx.work:work-runtime:2.11.2'
 
-	// SDK UTAMA ONESIGNAL
-	implementation 'com.onesignal:OneSignal:[4.0.0, 4.99.99]'
+    // SDK UTAMA ONESIGNAL
+    implementation 'com.onesignal:OneSignal:[4.0.0, 4.99.99]'
 
-	// Plugins Tambahan
-	implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
-	implementation 'androidx.biometric:biometric:1.1.0'
+    // Plugins Tambahan
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+    implementation 'androidx.biometric:biometric:1.1.0'
 }
 
 if (file('google-services.json').exists()) {
-	apply plugin: 'com.google.gms.google-services'
+    apply plugin: 'com.google.gms.google-services'
 } else {
-	println "swv-fcm-sync: google-services.json not found. Skipping Firebase Configuration."
+    println "swv-fcm-sync: google-services.json not found. Skipping Firebase Configuration."
 }
