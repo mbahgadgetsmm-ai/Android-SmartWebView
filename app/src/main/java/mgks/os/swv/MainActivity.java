@@ -12,8 +12,8 @@ package mgks.os.swv;
   4. Network Error Handling (offline page)
   5. SSL Error Handling (tidak bypass di production)
   6. Hardcoded strings ke resources
-  7. FIX: Hapus setAppCacheEnabled & setAppCachePath (deprecated)
-  8. FIX: Hapus progressBar (gunakan default)
+  7. AUTO REFRESH saat kembali dari aplikasi lain (hilangkan blank putih!)
+  8. FIX: Hapus setAppCacheEnabled & setAppCachePath (deprecated)
 */
 
 import android.Manifest;
@@ -104,6 +104,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     
     private boolean isFirstLaunchScanCheck = true;
     private boolean isNetworkAvailable = true;
+    
+    // ✅ TAMBAHKAN: Flag untuk auto refresh saat kembali dari aplikasi lain
+    private boolean isReturningFromExternalApp = false;
+    private String lastUrlBeforePause = "";
 
     static Functions fns = new Functions();
     private FileProcessing fileProcessing;
@@ -278,9 +282,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         webSettings.setSupportMultipleWindows(true);
         
-        // ✅ Cache & Database (FIX: Hapus setAppCacheEnabled & setAppCachePath)
+        // ✅ Cache & Database
         webSettings.setDatabaseEnabled(true);
-        // AppCache sudah deprecated di Android 9+, gunakan cache bawaan
         try {
             webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         } catch (Exception e) {
@@ -288,10 +291,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         
         // 🔒 FIX KEAMANAN: Nonaktifkan file access dari URL eksternal
-        webSettings.setAllowFileAccess(true); // Izin untuk file lokal saja
-        webSettings.setAllowFileAccessFromFileURLs(false); // 🔒 MATI
-        webSettings.setAllowUniversalAccessFromFileURLs(false); // 🔒 MATI
-        webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW); // 🔒 AMAN
+        webSettings.setAllowFileAccess(true);
+        webSettings.setAllowFileAccessFromFileURLs(false);
+        webSettings.setAllowUniversalAccessFromFileURLs(false);
+        webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         
         // ✅ Zoom Settings
         webSettings.setSupportZoom(true);
@@ -331,7 +334,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
                 String finalMimeType = mimeType;
                 
-                // ✅ Fix: Handle berbagai tipe file
                 if (finalMimeType == null || finalMimeType.equalsIgnoreCase("application/octet-stream") || fileName.endsWith(".bin")) {
                     if (url.contains("qris") || url.contains("deposit") || url.contains("invoice") || url.contains("gate")) {
                         finalMimeType = "image/png";
@@ -397,7 +399,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onProgressChanged(WebView view, int progress) {
-                // Hide welcome screen when page is loading
                 if (progress > 35) {
                     final View welcomeScreen = findViewById(R.id.msw_welcome);
                     if (SWVContext.asw_view != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
@@ -426,7 +427,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             permissionManager.requestInitialPermissions();
         }
         
-        // ✅ FIX: OneSignal - Gunakan dari strings.xml
         try {
             OneSignal.initWithContext(this);
             String oneSignalAppId = getString(R.string.onesignal_app_id);
@@ -446,30 +446,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    // ==================== BACK BUTTON HANDLER - FIXED ====================
+    // ==================== BACK BUTTON HANDLER ====================
 
     private void handleBackPressed() {
         if (SWVContext.asw_view != null) {
-            // ✅ Cek apakah bisa back di WebView
             if (SWVContext.asw_view.canGoBack()) {
                 SWVContext.asw_view.goBack();
                 return;
             }
             
-            // ✅ Cek URL saat ini
             String currentUrl = SWVContext.asw_view.getUrl();
             if (currentUrl != null && !currentUrl.contains("mbahgadget.co.id")) {
-                // Jika di luar domain utama, kembali ke home
                 SWVContext.asw_view.loadUrl("https://mbahgadget.co.id");
                 return;
             }
         }
         
-        // ✅ Jika semua gagal, keluar aplikasi
         moveTaskToBack(true);
     }
 
-    // ==================== ON RESUME - FIXED ====================
+    // ==================== ON RESUME - DENGAN AUTO REFRESH ====================
 
     @Override
     public void onResume() {
@@ -481,11 +477,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // ✅ Check network status
             checkNetworkAvailability();
             
+            // ✅ AUTO REFRESH - Kembali dari aplikasi lain (hilangkan blank putih!)
+            if (isReturningFromExternalApp) {
+                isReturningFromExternalApp = false;
+                
+                // 🔄 Refresh dengan delay 300ms biar WebView siap
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (SWVContext.asw_view != null) {
+                        String currentUrl = SWVContext.asw_view.getUrl();
+                        
+                        // ✅ Refresh hanya jika URL valid (bukan blank/about:blank)
+                        if (currentUrl != null && !currentUrl.isEmpty() && 
+                            !currentUrl.equals("about:blank") && 
+                            !currentUrl.equals("")) {
+                            
+                            // Reload halaman
+                            SWVContext.asw_view.reload();
+                            
+                            if (DEBUG) Log.d(TAG, "🔄 Auto Refresh setelah kembali dari aplikasi lain");
+                        }
+                    }
+                }, 300);
+            }
+            
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl("https://mbahgadget.co.id");
             } else {
-                // 🛑 Paksa matikan layer "Please wait..."
+                // 🛑 Matikan layer "Please wait..."
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
                 if (welcomeScreen != null) {
                     welcomeScreen.setVisibility(View.GONE);
@@ -501,35 +520,54 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private void clearLoadingOverlays() {
-        SWVContext.asw_view.evaluateJavascript(
-            "(function() {" +
-            "   var elements = document.getElementsByTagName('*');" +
-            "   for (var i = 0; i < elements.length; i++) {" +
-            "       var el = elements[i];" +
-            "       var text = el.innerText || '';" +
-            "       if (text.toLowerCase().includes('please wait') || " +
-            "           text.toLowerCase().includes('mohon tunggu') || " +
-            "           text.toLowerCase().includes('loading')) {" +
-            "           el.style.display = 'none';" +
-            "           el.style.visibility = 'hidden';" +
-            "       }" +
-            "   }" +
-            "   var loaders = document.querySelectorAll('[class*=\"loading\"], [id*=\"loading\"], [class*=\"overlay\"], [id*=\"overlay\"], [class*=\"preloader\"], [id*=\"preloader\"]');" +
-            "   for (var j = 0; j < loaders.length; j++) {" +
-            "       loaders[j].style.display = 'none';" +
-            "       loaders[j].style.visibility = 'hidden';" +
-            "   }" +
-            "})();", 
-            null
-        );
-    }
+    // ==================== ON PAUSE - DETEKSI KELUAR APLIKASI ====================
 
     @Override
     public void onPause() {
         super.onPause();
+        
         if (SWVContext.asw_view != null) {
             SWVContext.asw_view.onPause();
+            
+            // ✅ SIMPAN URL sebelum pindah ke aplikasi lain
+            String currentUrl = SWVContext.asw_view.getUrl();
+            if (currentUrl != null && !currentUrl.isEmpty()) {
+                lastUrlBeforePause = currentUrl;
+                
+                // ✅ Tandai bahwa aplikasi akan keluar (ke background)
+                // Ini akan terdeteksi di onResume
+                isReturningFromExternalApp = true;
+                
+                if (DEBUG) Log.d(TAG, "📤 Pindah ke aplikasi lain, URL: " + lastUrlBeforePause);
+            }
+        }
+    }
+
+    // ==================== CLEAR LOADING OVERLAYS ====================
+
+    private void clearLoadingOverlays() {
+        if (SWVContext.asw_view != null) {
+            SWVContext.asw_view.evaluateJavascript(
+                "(function() {" +
+                "   var elements = document.getElementsByTagName('*');" +
+                "   for (var i = 0; i < elements.length; i++) {" +
+                "       var el = elements[i];" +
+                "       var text = el.innerText || '';" +
+                "       if (text.toLowerCase().includes('please wait') || " +
+                "           text.toLowerCase().includes('mohon tunggu') || " +
+                "           text.toLowerCase().includes('loading')) {" +
+                "           el.style.display = 'none';" +
+                "           el.style.visibility = 'hidden';" +
+                "       }" +
+                "   }" +
+                "   var loaders = document.querySelectorAll('[class*=\"loading\"], [id*=\"loading\"], [class*=\"overlay\"], [id*=\"overlay\"], [class*=\"preloader\"], [id*=\"preloader\"]');" +
+                "   for (var j = 0; j < loaders.length; j++) {" +
+                "       loaders[j].style.display = 'none';" +
+                "       loaders[j].style.visibility = 'hidden';" +
+                "   }" +
+                "})();", 
+                null
+            );
         }
     }
 
@@ -566,7 +604,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onDestroy();
     }
 
-    // ==================== WEB VIEW CLIENT - FIXED ====================
+    // ==================== WEB VIEW CLIENT ====================
 
     private class WebViewCallback extends WebViewClient {
         @Override
@@ -593,7 +631,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (DEBUG) Log.d(TAG, "Page finished: " + url);
         }
 
-        // 🧠 PAYDISINI AUTO RE-ROUTING ENGINE - IMPROVED
+        // 🧠 PAYDISINI AUTO RE-ROUTING ENGINE
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
@@ -650,16 +688,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return true;
         }
 
-        // ✅ FIX: Better Error Handling
+        // ✅ Better Error Handling
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
-                // ✅ Cek apakah ada internet
                 checkNetworkAvailability();
                 
                 if (!isNetworkAvailable) {
                     view.post(() -> {
-                        // Tampilkan halaman offline custom
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
                             view.loadUrl(SWVContext.ASWV_OFFLINE_URL);
                         } else {
@@ -669,7 +705,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     });
                 } else {
                     view.post(() -> {
-                        // Tampilkan halaman error
                         if (SWVContext.ASWV_OFFLINE_URL != null && !SWVContext.ASWV_OFFLINE_URL.isEmpty()) {
                             view.loadUrl(SWVContext.ASWV_OFFLINE_URL);
                         } else {
@@ -684,10 +719,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         @Override
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-            // ✅ FIX: Jangan pernah bypass SSL error di production
             if (DEBUG) {
                 Log.w(TAG, "SSL Error: " + error.toString());
-                handler.proceed(); // Hanya untuk debug
+                handler.proceed();
             } else {
                 handler.cancel();
                 view.loadUrl("file:///android_asset/error.html");
@@ -715,7 +749,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fns.aswm_view("https://mbahgadget.co.id", false, 0, this);
     }
 
-    // ==================== KEY EVENT - FIXED ====================
+    // ==================== KEY EVENT ====================
 
     @Override
     public boolean onKeyDown(int keyCode, @NonNull KeyEvent event) {
