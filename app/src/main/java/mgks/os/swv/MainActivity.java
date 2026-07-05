@@ -1,9 +1,9 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS + AUTOMATIC DEEP-LINK DETECTOR (DANA, WHATSAPP) 
-  + ANTI-REFRESH MEMORY CACHE TUNING FOR BACKGROUND LIFECYCLE.
+  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD (FINAL BUGFIXED)
+  FIXED: 100% INTERNAL PAYMENTS + PLATFORM DEEP-LINK HANDLER (ANTI-DISCONNECT/ANTI-REFRESH)
+  TUNING: KUNCI DATABASE MEMORI LOKAL BIAR SESI LOGIN & KONEKSI TOKO TIDAK TERPUTUS PAS BALIK DARI DANA/MEDSOS
 */
 
 import android.Manifest;
@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
+        // 🛠️ PENGAMAN TOMBOL BACK: Jika blank putih atau salah masuk link medsos, paksa kembali ke toko asli lu
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -118,6 +119,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     } else {
                         if (SWVContext.asw_view.canGoBack()) {
                             SWVContext.asw_view.goBack(); 
+                        } else {
+                            // Cadangan darurat: jika macet di halaman blank luar, paksa muat ulang toko utama
+                            SWVContext.asw_view.loadUrl("https://mbahgadget.co.id");
                         }
                     }
                 }
@@ -175,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 SWVContext.asw_vcam_message = null;
             }
         );
-      qrScannerLauncher = registerForActivityResult(new ScanContract(),
+        qrScannerLauncher = registerForActivityResult(new ScanContract(),
                 result -> {
                     PluginInterface plugin = SWVContext.getPluginManager().getPluginInstance("QRScannerPlugin");
                     if (plugin instanceof QRScannerPlugin) {
@@ -253,13 +257,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         
-        // 🛠️ KUNCI DATA: Mengaktifkan Database & Cache lokal bawaan APK agar memori stabil pas balik dari DANA
+        // 🛠️ KUNCI DATA MEMORI: Mengaktifkan Database lokal agar sesi login toko SMM lu gak gampang ke-logout / putus koneksi
         webSettings.setDatabaseEnabled(true);
         try {
             webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         } catch (Exception e) { Log.e(TAG, "Cache Init Error", e); }
         
-        // ⚡ SUPER CEPAT: AKSELERASI HARDWARE PERANGKAT AKTIF
+        // ⚡ HARDWARE ACCELERATION AKTIF
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         
         webSettings.setSupportZoom(true);          
@@ -363,7 +367,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.onResume();
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
-                // 🚀 DIRECT DOMAIN: Membuka langsung toko mbahgadget
                 SWVContext.asw_view.loadUrl("https://mbahgadget.co.id"); 
             } else {
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
@@ -390,35 +393,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // 🔒 JALUR AMAN: Otomatis mendeteksi platform luar agar langsung membuka DANA/WhatsApp tanpa crash
+        // 🔒 PROTEKSI UTAMA: Mengatur pengalihan ke DANA / Medsos agar KONEKSI UTAMA TIDAK PUTUS
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // Cek skrip link non http/https (seperti intent://, whatsapp://, dana://)
+            // 1. Tangkap skrip non http/https (seperti intent://, whatsapp://, dana://, gopay://)
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 try {
+                    // ⭐ PENTING: Matikan loading internal WebView agar halaman toko asli tidak ikut ter-refresh/diskonek
+                    view.stopLoading();
                     Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
                     if (intent != null) {
                         view.getContext().startActivity(intent);
                         return true;
                     }
-                } catch (Exception e) {
-                    Log.e(TAG, "Gagal melontarkan intent aplikasi luar: " + e.getMessage());
-                }
+                } catch (Exception e) { Log.e(TAG, "Intent Error: " + e.getMessage()); }
             }
 
-            // Proteksi darurat link https payment gateway / WA agar dipaksa open via Deep-link
-            if (url.contains("dana.id/d/app") || url.contains("pembayaran") || url.contains("whatsapp.com")) {
+            // 2. Filter Pengalihan Paksa untuk Aplikasi Medsos & Sistem Pembayaran E-Wallet luar via Https
+            if (url.contains("instagram.com") || url.contains("tiktok.com") || url.contains("facebook.com") || 
+                url.contains("youtube.com") || url.contains("dana.id/d/app") || url.contains("whatsapp.com") || 
+                url.contains("pembayaran") || url.contains("checkout")) {
                 try {
+                    // ⭐ PENTING: Potong proses loading internal biar WebView gak ketimpa blank putih medsos
+                    view.stopLoading();
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     view.getContext().startActivity(intent);
                     return true;
-                } catch (Exception e) {
-                    Log.e(TAG, "Gagal melempar tautan eksternal: " + e.getMessage());
-                }
+                } catch (Exception e) { Log.e(TAG, "Deep Link Error: " + e.getMessage()); }
             }
             
+            // Jika masih link seputar toko mbahgadget, jalankan normal di dalam aplikasi
             view.loadUrl(url);
             return true;
         }
