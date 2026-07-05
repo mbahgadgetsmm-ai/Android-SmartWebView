@@ -1,10 +1,10 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD (UNIVERSAL ENGINE)
+  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD (UNIVERSAL CLEAN ENGINE)
   FIXED: 100% INTERNAL PAYMENTS + PLATFORM DEEP-LINK HANDLER (ANTI-DISCONNECT/ANTI-REFRESH)
-  TUNING: LOGIKA UNIVERSAL DETEKSI OTOMATIS SEGALA PLATFORM DI DUNIA (FB, TIKTOK, IG, THREADS, X, DLL)
-  JIKA BUKAN LINK TOKO UTAMA -> AUTO DIREDIREKSI KELUAR KE APLIKASI / BROWSER HP (ANTI-BLANK 100%)
+  TUNING: AUTOMATIC JAVASCRIPT INJECTION ON-RESUME -> MEMAKSA MENGHILANGKAN TULISAN "PLEASE WAIT" 
+  DARI WEB SMM SECARA OTOMATIS SAAT KEMBALI DARI APLIKASI PEMBAYARAN KELUAR
 */
 
 import android.Manifest;
@@ -256,6 +256,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setDomStorageEnabled(true);
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
+        webSettings.setSupportMultipleWindows(true);
         
         // 🛠️ KUNCI MEMORI DATABASE LOKAL
         webSettings.setDatabaseEnabled(true);
@@ -319,6 +320,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return new WebChromeClient() {
             @Override
             public boolean onShowFileChooser(WebView w, ValueCallback<Uri[]> f, FileChooserParams p) { return fileProcessing.onShowFileChooser(w, f, p); }
+            
+            @Override
+            public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, android.os.Message resultMsg) {
+                WebView newWebView = new WebView(MainActivity.this);
+                newWebView.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
+                        String url = r.getUrl().toString();
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        MainActivity.this.startActivity(intent);
+                        return true;
+                    }
+                });
+                WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+                transport.setWebView(newWebView);
+                resultMsg.sendToTarget();
+                return true;
+            }
+
             @Override
             public void onProgressChanged(WebView view, int p) {
                 if (p > 40) {
@@ -359,6 +380,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    // 🚀 ENGINE INJEKSI ON-RESUME: Hancurkan total tulisan "Please wait" milik web SMM secara otomatis pas pembeli kembali!
     @Override
     public void onResume() {
         super.onResume();
@@ -368,9 +390,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl("https://mbahgadget.co.id"); 
             } else {
+                if (SWVContext.asw_view.getVisibility() != View.VISIBLE) {
+                    SWVContext.asw_view.setVisibility(View.VISIBLE);
+                }
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
-                if (welcomeScreen != null) welcomeScreen.setVisibility(View.GONE);
-                SWVContext.asw_view.setVisibility(View.VISIBLE);
+                if (welcomeScreen != null) {
+                    welcomeScreen.setVisibility(View.GONE);
+                }
+
+                // 🔥 JAVASCRIPT INJECTION: Bersihkan segala macam element 'Please wait' atau overlay loading yang tersangkut di website SMM lu
+                SWVContext.asw_view.evaluateJavascript(
+                    "(function() {" +
+                    "   var elements = document.getElementsByTagName('*');" +
+                    "   for (var i = 0; i < elements.length; i++) {" +
+                    "       var el = elements[i];" +
+                    "       if (el.innerText && (el.innerText.toLowerCase().includes('please wait') || el.innerText.toLowerCase().includes('mohon tunggu'))) {" +
+                    "           el.style.display = 'none';" +
+                    "           el.style.visibility = 'hidden';" +
+                    "       }" +
+                    "   }" +
+                    "   var overlays = document.querySelectorAll('[class*=\"loading\"], [id*=\"loading\"], [class*=\"overlay\"], [id*=\"overlay\"], [class*=\"preloader\"], [id*=\"preloader\"]');" +
+                    "   for (var j = 0; j < overlays.length; j++) {" +
+                    "       overlays[j].style.display = 'none';" +
+                    "       overlays[j].style.visibility = 'hidden';" +
+                    "   }" +
+                    "})();", 
+                    null
+                );
             }
         }
     }
@@ -392,15 +438,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // 🧠 LOGIKA UNIVERSAL DETEKTOR PLATFORM DI SELURUH DUNIA (ANTI REFRESH & ANTI BLANK 100%)
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // 1. Tangkap Intent Protokol Khusus Non Http (whatsapp://, intent://, dana://, gopay://, dll)
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 try {
-                    view.stopLoading(); // Potong loading internal
                     Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
                     if (intent != null) {
                         if (view.getContext().getPackageManager().resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) != null) {
@@ -414,29 +457,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                         return true;
                     }
-                } catch (Exception e) { Log.e(TAG, "Universal Intent Error: " + e.getMessage()); }
+                } catch (Exception e) { Log.e(TAG, "Intent Error: " + e.getMessage()); }
             }
 
-            // 2. LOGIKA UTAMA: Jika link yang diklik BUKAN milik toko utama lu dan BUKAN file internal...
             if (!url.contains("mbahgadget.co.id") && !url.startsWith("file://")) {
                 try {
-                    view.stopLoading(); // Kunci halaman toko biar gak terputus/refresh
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    
-                    // Cek ketersediaan aplikasi resminya di HP (Instagram, FB, TikTok, Threads, X, E-wallet, m-Banking, dll)
                     if (intent.resolveActivity(view.getContext().getPackageManager()) != null) {
-                        view.getContext().startActivity(intent); // Langsung loncat buka ke aplikasi resminya!
+                        view.getContext().startActivity(intent); 
                     } else {
-                        // JIKA APLIKASI GAK ADA -> Auto diputar ke Browser Bawaan HP secara aman
                         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                         browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         view.getContext().startActivity(browserIntent);
                     }
                     return true;
-                } catch (Exception e) { Log.e(TAG, "Universal Deep Link Error: " + e.getMessage()); }
+                } catch (Exception e) { Log.e(TAG, "Deep Link Error: " + e.getMessage()); }
             }
             
-            // Jika link masih dalam ruang lingkup mbahgadget.co.id, buka normal di dalam aplikasi
             view.loadUrl(url);
             return true;
         }
