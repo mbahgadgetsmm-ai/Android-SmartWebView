@@ -3,7 +3,7 @@ package mgks.os.swv;
 /*
   Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD (FINAL BUGFIXED)
   FIXED: 100% INTERNAL PAYMENTS + PLATFORM DEEP-LINK HANDLER (ANTI-DISCONNECT/ANTI-REFRESH)
-  TUNING: KUNCI DATABASE MEMORI LOKAL BIAR SESI LOGIN & KONEKSI TOKO TIDAK TERPUTUS PAS BALIK DARI DANA/MEDSOS
+  TUNING: DETEKSI OTOMATIS APLIKASI LUAR -> JIKA ADA BUKA APK, JIKA TIDAK ADA LEMPAR KE BROWSER HP (ANTI-BLANK 100%)
 */
 
 import android.Manifest;
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         
-        // 🛠️ PENGAMAN TOMBOL BACK: Jika blank putih atau salah masuk link medsos, paksa kembali ke toko asli lu
+        // 🛠️ PENGAMAN TOMBOL BACK: Jika terjadi masalah/blank, paksa kembali ke toko utama lu
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -120,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if (SWVContext.asw_view.canGoBack()) {
                             SWVContext.asw_view.goBack(); 
                         } else {
-                            // Cadangan darurat: jika macet di halaman blank luar, paksa muat ulang toko utama
                             SWVContext.asw_view.loadUrl("https://mbahgadget.co.id");
                         }
                     }
@@ -257,13 +256,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         
-        // 🛠️ KUNCI DATA MEMORI: Mengaktifkan Database lokal agar sesi login toko SMM lu gak gampang ke-logout / putus koneksi
+        // 🛠️ KUNCI MEMORI: Mengaktifkan Database lokal agar sesi login toko SMM lu gak gampang ke-logout / putus koneksi
         webSettings.setDatabaseEnabled(true);
         try {
             webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         } catch (Exception e) { Log.e(TAG, "Cache Init Error", e); }
         
-        // ⚡ HARDWARE ACCELERATION AKTIF
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         
         webSettings.setSupportZoom(true);          
@@ -393,38 +391,55 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // 🔒 PROTEKSI UTAMA: Mengatur pengalihan ke DANA / Medsos agar KONEKSI UTAMA TIDAK PUTUS
+        // 🔒 LOGIKA CERDAS: DETEKSI APLIKASI LUAR + AUTOMATIC BROWSER FALLBACK
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // 1. Tangkap skrip non http/https (seperti intent://, whatsapp://, dana://, gopay://)
+            // 1. Tangkap Intent khusus non http (whatsapp://, telegram://, dana://, intent://)
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 try {
-                    // ⭐ PENTING: Matikan loading internal WebView agar halaman toko asli tidak ikut ter-refresh/diskonek
-                    view.stopLoading();
+                    view.stopLoading(); // Potong jalur loading biar gak refresh
                     Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
                     if (intent != null) {
-                        view.getContext().startActivity(intent);
+                        // Cek apakah ada aplikasi yang bisa menangani intent ini di HP pengguna
+                        if (view.getContext().getPackageManager().resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) != null) {
+                            view.getContext().startActivity(intent);
+                        } else {
+                            // Jika aplikasi tidak ditemukan, coba cari link web fallback di dalam intent-nya
+                            String fallbackUrl = intent.getStringExtra("browser_fallback_url");
+                            if (fallbackUrl != null) {
+                                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fallbackUrl));
+                                view.getContext().startActivity(browserIntent);
+                            }
+                        }
                         return true;
                     }
-                } catch (Exception e) { Log.e(TAG, "Intent Error: " + e.getMessage()); }
+                } catch (Exception e) { Log.e(TAG, "Intent Handling Error: " + e.getMessage()); }
             }
 
-            // 2. Filter Pengalihan Paksa untuk Aplikasi Medsos & Sistem Pembayaran E-Wallet luar via Https
+            // 2. Filter Tautan Https Media Sosial & Payment Gateway Utama
             if (url.contains("instagram.com") || url.contains("tiktok.com") || url.contains("facebook.com") || 
                 url.contains("youtube.com") || url.contains("dana.id/d/app") || url.contains("whatsapp.com") || 
                 url.contains("pembayaran") || url.contains("checkout")) {
                 try {
-                    // ⭐ PENTING: Potong proses loading internal biar WebView gak ketimpa blank putih medsos
-                    view.stopLoading();
+                    view.stopLoading(); // Kunci halaman utama biar gak terputus
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    view.getContext().startActivity(intent);
+                    
+                    // Cek ketersediaan aplikasi resmi di HP (Mencegah eror blank di dalam app)
+                    if (intent.resolveActivity(view.getContext().getPackageManager()) != null) {
+                        view.getContext().startActivity(intent); // Langsung lempar masuk ke aplikasinya
+                    } else {
+                        // JIKA APLIKASI TIDAK ADA -> Paksa buka secara aman di Browser eksternal bawaan HP (Chrome/dll)
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        view.getContext().startActivity(browserIntent);
+                    }
                     return true;
-                } catch (Exception e) { Log.e(TAG, "Deep Link Error: " + e.getMessage()); }
+                } catch (Exception e) { Log.e(TAG, "Deep Link Fallback Error: " + e.getMessage()); }
             }
             
-            // Jika masih link seputar toko mbahgadget, jalankan normal di dalam aplikasi
+            // Jika link internal toko mbahgadget, jalankan normal di dalam WebView aplikasi
             view.loadUrl(url);
             return true;
         }
