@@ -1,10 +1,9 @@
 package mgks.os.swv;
 
 /*
-  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD (UNIVERSAL CLEAN ENGINE)
+  Smart WebView v8 - MBAH GADGET TURBO CACHE BUILD (PAYDISINI INJECTION ENGINE)
   FIXED: 100% INTERNAL PAYMENTS + PLATFORM DEEP-LINK HANDLER (ANTI-DISCONNECT/ANTI-REFRESH)
-  TUNING: AUTOMATIC JAVASCRIPT INJECTION ON-RESUME -> MEMAKSA MENGHILANGKAN TULISAN "PLEASE WAIT" 
-  DARI WEB SMM SECARA OTOMATIS SAAT KEMBALI DARI APLIKASI PEMBAYARAN KELUAR
+  TUNING: FIX ON-RESUME LOADING -> ANTI MENGGANTUNG "PLEASE WAIT" SAAT DIVALIDASI OLEH GATEWAY PAYDISINI
 */
 
 import android.Manifest;
@@ -342,7 +341,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onProgressChanged(WebView view, int p) {
-                if (p > 40) {
+                if (p > 35) {
                     final View welcomeScreen = findViewById(R.id.msw_welcome);
                     if (SWVContext.asw_view != null && welcomeScreen != null && welcomeScreen.getVisibility() == View.VISIBLE) {
                         SWVContext.asw_view.setVisibility(View.VISIBLE);
@@ -380,7 +379,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    // 🚀 ENGINE INJEKSI ON-RESUME: Hancurkan total tulisan "Please wait" milik web SMM secara otomatis pas pembeli kembali!
+    // 🚀 ANTI KUNCI LAYAR ON-RESUME: Matikan msw_welcome secara brutal, bersihkan overlay loading bawaan web disaat bersamaan!
     @Override
     public void onResume() {
         super.onResume();
@@ -390,29 +389,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 isFirstLaunchScanCheck = false;
                 SWVContext.asw_view.loadUrl("https://mbahgadget.co.id"); 
             } else {
-                if (SWVContext.asw_view.getVisibility() != View.VISIBLE) {
-                    SWVContext.asw_view.setVisibility(View.VISIBLE);
-                }
+                // 🛑 Paksa matikan layer "Please wait..." bawaan APK Android agar halaman asli di bawahnya langsung terlihat instan
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
                 if (welcomeScreen != null) {
                     welcomeScreen.setVisibility(View.GONE);
                 }
+                if (SWVContext.asw_view.getVisibility() != View.VISIBLE) {
+                    SWVContext.asw_view.setVisibility(View.VISIBLE);
+                }
 
-                // 🔥 JAVASCRIPT INJECTION: Bersihkan segala macam element 'Please wait' atau overlay loading yang tersangkut di website SMM lu
+                // 🛑 Eksekusi pembersihan sisa-sisa loading menggantung yang berasal dari web paydisini / web smm
                 SWVContext.asw_view.evaluateJavascript(
                     "(function() {" +
                     "   var elements = document.getElementsByTagName('*');" +
                     "   for (var i = 0; i < elements.length; i++) {" +
                     "       var el = elements[i];" +
-                    "       if (el.innerText && (el.innerText.toLowerCase().includes('please wait') || el.innerText.toLowerCase().includes('mohon tunggu'))) {" +
+                    "       if (el.innerText && (el.innerText.toLowerCase().includes('please wait') || el.innerText.toLowerCase().includes('mohon tunggu') || el.innerText.toLowerCase().includes('loading'))) {" +
                     "           el.style.display = 'none';" +
                     "           el.style.visibility = 'hidden';" +
                     "       }" +
                     "   }" +
-                    "   var overlays = document.querySelectorAll('[class*=\"loading\"], [id*=\"loading\"], [class*=\"overlay\"], [id*=\"overlay\"], [class*=\"preloader\"], [id*=\"preloader\"]');" +
-                    "   for (var j = 0; j < overlays.length; j++) {" +
-                    "       overlays[j].style.display = 'none';" +
-                    "       overlays[j].style.visibility = 'hidden';" +
+                    "   var loaders = document.querySelectorAll('[class*=\"loading\"], [id*=\"loading\"], [class*=\"overlay\"], [id*=\"overlay\"], [class*=\"preloader\"], [id*=\"preloader\"]');" +
+                    "   for (var j = 0; j < loaders.length; j++) {" +
+                    "       loaders[j].style.display = 'none';" +
+                    "       loaders[j].style.visibility = 'hidden';" +
                     "   }" +
                     "})();", 
                     null
@@ -430,18 +430,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private class WebViewCallback extends WebViewClient {
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) { super.onPageStarted(view, url, favicon); }
+        
         @Override
         public void onPageFinished(WebView view, String url) {
             final View welcomeScreen = findViewById(R.id.msw_welcome);
-            if (SWVContext.asw_view != null && welcomeScreen != null) { SWVContext.asw_view.setVisibility(View.VISIBLE); welcomeScreen.setVisibility(View.GONE); }
+            if (SWVContext.asw_view != null && welcomeScreen != null) { 
+                SWVContext.asw_view.setVisibility(View.VISIBLE); 
+                welcomeScreen.setVisibility(View.GONE); 
+            }
             view.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
+        // 🧠 PAYDISINI AUTO RE-ROUTING ENGINE
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
+            // 1. Tangani Skema Pembayaran Khusus (dana://, shopeeid://, gojek://)
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 try {
                     Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
@@ -460,6 +466,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } catch (Exception e) { Log.e(TAG, "Intent Error: " + e.getMessage()); }
             }
 
+            // 2. JIKA DILEMPAR KE LINK PAYDISINI, KUNCI BIAR DIRENDERING DI DALAM APK UTAMA AGAR AMAN & BERSIH KETIKA KEMBALI
+            if (url.contains("paydisini.co.id")) {
+                // Sembunyikan efek welcome bawaan APK biar pas perpindahan domain luar ini layar gak ketutup tulisan "Please wait"
+                final View welcomeScreen = ((Activity)view.getContext()).findViewById(R.id.msw_welcome);
+                if (welcomeScreen != null) welcomeScreen.setVisibility(View.GONE);
+                
+                view.loadUrl(url); // Biarkan Paydisini memproses QRIS/E-Wallet di dalam browser internal
+                return true;
+            }
+
+            // 3. Tangani Domain Luar Lainnya (Medsos, dll)
             if (!url.contains("mbahgadget.co.id") && !url.startsWith("file://")) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
