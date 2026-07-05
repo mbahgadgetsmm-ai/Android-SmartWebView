@@ -18,6 +18,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            margin: 0;
         }
         .container {
             max-width: 400px;
@@ -81,6 +82,7 @@
             box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
             cursor: pointer;
             border: none;
+            font-family: inherit;
         }
         .btn-reload:hover {
             background: #00b84c;
@@ -101,6 +103,7 @@
             background: #ccc;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
         .hint {
             margin-top: 20px;
@@ -120,6 +123,9 @@
         .status-dot.online {
             background: #00c853;
         }
+        .status-dot.offline {
+            background: #ff4444;
+        }
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(0.8); }
@@ -131,6 +137,10 @@
             font-size: 13px;
             margin-top: 12px;
             transition: color 0.3s ease;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
         }
         .btn-home-offline:hover {
             color: #00c853;
@@ -174,7 +184,7 @@
             <span id="statusLabel">Menunggu koneksi...</span>
         </p>
 
-        <a href="javascript:void(0)" onclick="goHome()" class="btn-home-offline">← Kembali ke Beranda</a>
+        <button onclick="goHome()" class="btn-home-offline">← Kembali ke Beranda</button>
     </div>
 
     <script>
@@ -197,6 +207,14 @@
             btn.disabled = true;
             btn.innerHTML = '⏳ Memeriksa...';
             
+            // Update status
+            statusTitle.textContent = 'Memeriksa Koneksi...';
+            statusDesc.textContent = 'Sedang mengecek koneksi internet.';
+            statusDescSmall.textContent = 'Mohon tunggu sebentar.';
+            statusDot.className = 'status-dot';
+            statusLabel.textContent = 'Memeriksa...';
+            statusLabel.style.color = '#666';
+            
             // Cek koneksi
             checkConnection(function(isOnline) {
                 if (isOnline) {
@@ -209,7 +227,7 @@
                     statusLabel.style.color = '#00c853';
                     
                     setTimeout(function() {
-                        window.location.reload(true);
+                        window.location.href = 'https://mbahgadget.co.id';
                     }, 500);
                 } else {
                     // ❌ Masih OFFLINE
@@ -223,9 +241,9 @@
                     statusTitle.textContent = 'Masih Offline';
                     statusDesc.textContent = 'Koneksi internet belum tersedia.';
                     statusDescSmall.textContent = 'Cek WiFi atau data seluler Anda.';
-                    statusDot.className = 'status-dot';
+                    statusDot.className = 'status-dot offline';
                     statusLabel.textContent = 'Masih offline...';
-                    statusLabel.style.color = '#aaa';
+                    statusLabel.style.color = '#999';
                     
                     // Auto retry after 10 seconds
                     if (checkCount < maxCheck) {
@@ -235,6 +253,9 @@
                                 checkAndReload();
                             }
                         }, 10000);
+                    } else {
+                        statusLabel.textContent = 'Coba manual dengan klik tombol';
+                        statusLabel.style.color = '#999';
                     }
                 }
             });
@@ -268,7 +289,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 checkAndReload();
-            }, 2000);
+            }, 1500);
         });
         
         // ✅ Cek koneksi setiap 15 detik (otomatis)
