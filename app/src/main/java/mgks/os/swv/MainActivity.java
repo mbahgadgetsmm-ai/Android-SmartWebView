@@ -15,6 +15,7 @@ import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap; // ⭐ INI YANG KURANG!
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
