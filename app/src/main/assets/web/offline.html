@@ -5,126 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Offline - MBAH GADGET</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background:#ffffff;
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:20px;
         }
         .container {
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-            padding: 20px;
-            animation: fadeIn 0.5s ease;
+            max-width:400px; width:100%; text-align:center; padding:20px;
+            animation:fadeIn 0.5s ease;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity:0; transform:translateY(20px); }
+            to { opacity:1; transform:translateY(0); }
         }
-        .logo {
-            font-size: 64px;
-            margin-bottom: 8px;
-        }
-        .brand {
-            color: #00c853;
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 4px;
-            letter-spacing: -0.5px;
-        }
-        .subtitle {
-            color: #999;
-            font-size: 13px;
-            margin-bottom: 30px;
-        }
-        .offline-icon {
-            font-size: 72px;
-            margin-bottom: 16px;
-        }
-        .title {
-            color: #333;
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .desc {
-            color: #666;
-            font-size: 15px;
-            line-height: 1.6;
-            margin-bottom: 6px;
-        }
-        .desc-small {
-            color: #999;
-            font-size: 13px;
-            line-height: 1.5;
-            margin-bottom: 28px;
-        }
+        .logo { font-size:64px; margin-bottom:8px; }
+        .brand { color:#00c853; font-size:28px; font-weight:800; margin-bottom:4px; }
+        .subtitle { color:#999; font-size:13px; margin-bottom:30px; }
+        .offline-icon { font-size:72px; margin-bottom:16px; }
+        .title { color:#333; font-size:20px; font-weight:700; margin-bottom:8px; }
+        .desc { color:#666; font-size:15px; line-height:1.6; margin-bottom:6px; }
+        .desc-small { color:#999; font-size:13px; line-height:1.5; margin-bottom:28px; }
         .btn-reload {
-            display: inline-block;
-            background: #00c853;
-            color: white;
-            padding: 14px 40px;
-            text-decoration: none;
-            font-weight: 600;
-            border-radius: 50px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+            display:inline-block; background:#00c853; color:white; padding:14px 40px;
+            text-decoration:none; font-weight:600; border-radius:50px; font-size:16px;
+            transition:all 0.3s ease; box-shadow:0 4px 15px rgba(0,200,83,0.3);
         }
-        .btn-reload:hover {
-            background: #00b84c;
-            transform: scale(1.02);
-            box-shadow: 0 6px 20px rgba(0, 200, 83, 0.4);
-        }
-        .btn-reload:active {
-            transform: scale(0.98);
-        }
-        .btn-reload svg {
-            width: 18px;
-            height: 18px;
-            fill: white;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-        .hint {
-            margin-top: 20px;
-            color: #aaa;
-            font-size: 12px;
-        }
+        .btn-reload:hover { background:#00b84c; transform:scale(1.02); }
+        .btn-reload svg { width:18px; height:18px; fill:white; vertical-align:middle; margin-right:8px; }
+        .hint { margin-top:20px; color:#aaa; font-size:12px; }
         .status-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #ff4444;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-            margin-right: 6px;
-            vertical-align: middle;
+            display:inline-block; width:8px; height:8px; background:#ff4444;
+            border-radius:50%; animation:pulse 1.5s infinite; margin-right:6px; vertical-align:middle;
         }
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
+            0%,100% { opacity:1; transform:scale(1); }
+            50% { opacity:0.5; transform:scale(0.8); }
         }
         .btn-home-offline {
-            display: inline-block;
-            color: #999;
-            text-decoration: none;
-            font-size: 13px;
-            margin-top: 12px;
-            transition: color 0.3s ease;
+            display:inline-block; color:#999; text-decoration:none; font-size:13px;
+            margin-top:12px; transition:color 0.3s ease;
         }
-        .btn-home-offline:hover {
-            color: #00c853;
-        }
+        .btn-home-offline:hover { color:#00c853; }
     </style>
 </head>
 <body>
@@ -132,24 +58,17 @@
         <div class="logo">📱</div>
         <div class="brand">MBAH GADGET</div>
         <p class="subtitle">SMM Panel Indonesia</p>
-        
         <div class="offline-icon">📡</div>
         <h1 class="title">Koneksi Terputus</h1>
         <p class="desc">Anda sedang offline.</p>
         <p class="desc-small">Periksa kembali koneksi internet Anda,<br>pastikan WiFi atau data seluler aktif.</p>
-        
         <a href="javascript:window.location.reload(true)" class="btn-reload">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path d="M17.65,6.35C16.2,4.9,14.21,4,12,4A8,8,0,0,0,4,12a8,8,0,0,0,8,8c3.73,0,6.84-2.55,7.73-6h-2.08c-.82,2.33-3.04,4-5.65,4-3.31,0-6-2.69-6-6s2.69-6,6-6c1.66,0,3.14.69,4.22,1.78L13,11h7V4l-2.35,2.35z"/>
             </svg>
             Coba Lagi
         </a>
-        
-        <p class="hint">
-            <span class="status-dot"></span>
-            Menunggu koneksi...
-        </p>
-
+        <p class="hint"><span class="status-dot"></span>Menunggu koneksi...</p>
         <a href="https://mbahgadget.co.id" class="btn-home-offline">← Kembali ke Beranda</a>
     </div>
 </body>
