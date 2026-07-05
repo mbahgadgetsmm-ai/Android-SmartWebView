@@ -2,7 +2,8 @@ package mgks.os.swv;
 
 /*
   Smart WebView v8 - MBAH GADGET SUPER FAST (4-PERMISSION NORMAL MODE)
-  FIXED: 100% INTERNAL PAYMENTS + AUTOMATIC DEEP-LINK DETECTOR FOR EXTERNAL APPS (DANA, WHATSAPP, ETC)
+  FIXED: 100% INTERNAL PAYMENTS + AUTOMATIC DEEP-LINK DETECTOR (DANA, WHATSAPP) 
+  + ANTI-REFRESH MEMORY CACHE TUNING FOR BACKGROUND LIFECYCLE.
 */
 
 import android.Manifest;
@@ -246,12 +247,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Playground playground = new Playground(this, SWVContext.asw_view, fns);
         SWVContext.getPluginManager().setPlayground(playground);
         WebSettings webSettings = SWVContext.asw_view.getSettings();
+        
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setLoadsImagesAutomatically(true);
         webSettings.setRenderPriority(WebSettings.RenderPriority.HIGH);
-        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
         
+        // 🛠️ KUNCI DATA: Mengaktifkan Database & Cache lokal bawaan APK agar memori stabil pas balik dari DANA
+        webSettings.setDatabaseEnabled(true);
+        try {
+            webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        } catch (Exception e) { Log.e(TAG, "Cache Init Error", e); }
+        
+        // ⚡ SUPER CEPAT: AKSELERASI HARDWARE PERANGKAT AKTIF
         SWVContext.asw_view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         
         webSettings.setSupportZoom(true);          
@@ -355,6 +363,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             SWVContext.asw_view.onResume();
             if (isFirstLaunchScanCheck) {
                 isFirstLaunchScanCheck = false;
+                // 🚀 DIRECT DOMAIN: Membuka langsung toko mbahgadget
                 SWVContext.asw_view.loadUrl("https://mbahgadget.co.id"); 
             } else {
                 final View welcomeScreen = findViewById(R.id.msw_welcome);
@@ -381,12 +390,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!url.startsWith("file://") && SWVContext.ASWV_GTAG != null && !SWVContext.ASWV_GTAG.isEmpty()) fns.inject_gtag(view, SWVContext.ASWV_GTAG);
         }
 
-        // ⚡ CANGGIH: MEDETEKSI DAN OTOMATIS MEMBUKA APLIKASI LUAR (DEEP LINKING)
+        // 🔒 JALUR AMAN: Otomatis mendeteksi platform luar agar langsung membuka DANA/WhatsApp tanpa crash
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             
-            // Cek jika link bukan http/https normal (misal whatsapp:, intent:, dana:, shopeepay:, gopay:)
+            // Cek skrip link non http/https (seperti intent://, whatsapp://, dana://)
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 try {
                     Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
@@ -395,18 +404,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         return true;
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "Gagal membuka intent otomatis: " + e.getMessage());
+                    Log.e(TAG, "Gagal melontarkan intent aplikasi luar: " + e.getMessage());
                 }
             }
 
-            // Proteksi khusus jika link e-wallet/payment gateway dilempar via https tapi mengarah ke aplikasi luar
+            // Proteksi darurat link https payment gateway / WA agar dipaksa open via Deep-link
             if (url.contains("dana.id/d/app") || url.contains("pembayaran") || url.contains("whatsapp.com")) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     view.getContext().startActivity(intent);
                     return true;
                 } catch (Exception e) {
-                    Log.e(TAG, "Gagal deep-link manual: " + e.getMessage());
+                    Log.e(TAG, "Gagal melempar tautan eksternal: " + e.getMessage());
                 }
             }
             
