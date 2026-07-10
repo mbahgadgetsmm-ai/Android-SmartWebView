@@ -1,8 +1,9 @@
 /*
-  Smart WebView v8 - MBAH GADGET (FIXED & SECURE)
+  Smart WebView v8.3.0 - MBAH GADGET (FIXED & SECURE)
   ✅ minifyEnabled = true (Keamanan + Ukuran APK kecil)
   ✅ shrinkResources = true (Hapus resource tidak terpakai)
-  ✅ Version Code & Name terbaru
+  ✅ Version 8.3.0 (Code 21)
+  ✅ Rating Plugin Dihapus
 */
 
 plugins {
@@ -30,8 +31,9 @@ android {
         minSdk = swvProps.getProperty('build.sdk.min', '24').toInteger()
         targetSdk = swvProps.getProperty('build.sdk.compile', '36').toInteger()
         
-        versionCode = swvProps.getProperty('build.version.code', '20').toInteger()
-        versionName = swvProps.getProperty('build.version.name', '8.2.0')
+        // ✅ VERSION SUDAH SINKRON dengan swv.properties
+        versionCode = swvProps.getProperty('build.version.code', '21').toInteger()
+        versionName = swvProps.getProperty('build.version.name', '8.3.0')
         
         multiDexEnabled = true
     }
